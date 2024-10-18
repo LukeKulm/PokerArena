@@ -1,6 +1,7 @@
 # simulates a game of player objects and makes repeated calls to score_hand
 from player import Player
 from score_hands import best_hand_calc
+import numpy as np
 import random
 
 class Game:
@@ -8,6 +9,7 @@ class Game:
     def __init__(self, num_players):
         self.num_players = num_players
         self.players = [Player(f"Player {i+1}") for i in range(num_players)]
+        self.hands = [Hand() for _ in range(num_players)]
         self.dealer_position = 0
         self.community_cards = Hand()
         self.deck = Deck()
@@ -16,7 +18,7 @@ class Game:
 
     def deal_hole_cards(self):
         """Deals two cards to each player."""
-        for player in self.players:
+        for player in self.players: # needs to change
             player.hand.add_card(*self.deck.deal_card())
             player.hand.add_card(*self.deck.deal_card())
 
@@ -97,7 +99,12 @@ class Game:
                 print(f"{winning_player.name} wins the pot of {self.pot} chips!")
         winning_player.chips += self.pot
         self.pot = 0
-    
+
+    def encode(self, player):
+        state = np.zeros(21)
+        state[0] = self.num_players
+        state[1] = player.position #### fill this in
+        state[2] =     
 class Deck:
     """Represents a deck of cards for dealing."""
     def __init__(self):
