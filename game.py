@@ -52,7 +52,6 @@ class Game:
     def deal_river(self):
         """Deals the fifth community card (the river)."""
         self.community_cards.add_card(*self.deck.deal_card())
-
     def betting_round(self): # TODO: change acting order based on self.order
         """Simulates a betting round where each player can bet, call/check, or fold."""
         # start_position = (self.dealer_position + 1) % self.num_players
