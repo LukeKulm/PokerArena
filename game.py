@@ -186,8 +186,10 @@ class Game:
             return 12
         if rank == "K":
             return 13
-        else: # ace
+        if rank == "A":
             return 14
+        else:
+            return int(rank)
     
     def suit_to_num(self, suit):
         if suit == "c":
