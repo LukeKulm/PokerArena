@@ -2,7 +2,7 @@ import csv
 import pytest
 import score_hands
 
-TEST_DATA_PATH = "/Users/colebreen/Desktop/4701 Project/JK_LCMJ_ctb93_jcs547_lbk73_mmw243/data/poker_hands/poker-hand-testing.data"
+TEST_DATA_PATH = "./data/poker_hands/poker-hand-testing.data"
 
 suit_map_to_our_encoding = {"1": "c", "2": "d", "3": "h", "4": "s"}
 card_map_to_our_encoding = {"1": "A", "13": "K", "12": "Q", "11": "J", "10": "T",
