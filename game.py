@@ -1,6 +1,7 @@
 # simulates a game of player objects and makes repeated calls to score_hand
 from player import Player
 from score_hands import best_hand_calc
+import random
 
 class Game:
     """Represents the overall poker game."""
@@ -98,8 +99,13 @@ class Game:
         self.pot = 0
     
 class Deck:
+    """Represents a deck of cards for dealing."""
     def __init__(self):
-        self.cards_available = None
+        self.cards_available = [(rank, suit) for rank in "23456789TJQKA" for suit in "cdhs"]
+        random.shuffle(self.cards_available)
+    
+    def deal_card(self):
+        return self.cards_available.pop()
         
 
 class Hand:
