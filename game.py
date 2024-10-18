@@ -24,6 +24,7 @@ class Game:
         self.bb = 2
         self.stacksize = self.bb * 100
         self.folded = [False]*num_players
+        self.bets = [0]*num_players
 
     def gen_order(self):
         """generates the order of play based on dealer position""" # for example if dealer is 2 and num_players is 4, order is [3, 0, 1, 2]
@@ -32,13 +33,26 @@ class Game:
         for i in range(start, start + self.num_players):
             result.append(i % self.num_players)
         return result
-    def pot_good(self, calls):
+    
+    # def pot_good(self, calls):
+    #     for i in range(self.num_players):
+    #         if self.folded[i] or self.current_bet == calls[i] or self.players[i].allin:
+    #             pass
+    #         else:
+    #             return False
+    #     return True
+    
+    def pg(self): # missing allin functionality maybe????
+        # if all players have either folded or bet the same amount, return True
+        print("checking if pot is good . . . ")
         for i in range(self.num_players):
-            if self.folded[i] or self.current_bet == calls[i] or self.players[i].allin:
+            if self.folded[i] or self.bets[i] == self.current_bet or self.players[i].allin:
                 pass
-            else:
+            elif self.bets[i] < self.current_bet:
+                print("player "+str(i)+" has not matched the current bet of " +str(self.current_bet)+ " and has bet "+str(self.bets[i]))
                 return False
         return True
+
     def deal_hole_cards(self):
         """Deals two cards to each player."""
         self.folded = [False]*self.num_players
@@ -58,46 +72,49 @@ class Game:
     def deal_river(self):
         """Deals the fifth community card (the river)."""
         self.community_cards.add_card(*self.deck.deal_card())
+        
     def betting_round(self):
         """Simulates a betting round where each player can bet, call/check, or fold."""
-        calls = [0]*self.num_players
-        first = True
-        while not self.pot_good(calls) or first:
+
+        advance = False
+        raiser = None
+
+        while advance == False:
             
             for i in self.order:
-                if self.pot_good(calls) and not first:
-                    break
+
                 self.win_check()
                 player = self.players[i]
-                if self.folded[i] or player.allin:
+                if self.folded[i] or player.allin or i == raiser:
                     continue
                 state = self.encode(i)
                 
                 action, bet_amount,  allin = player.act(state)
 
-                if action == 2:
+                if action == 2: # raise
                     self.pot += bet_amount
-                    calls[i] += bet_amount
+                    self.bets[i] = bet_amount
                     player.bet(bet_amount)
                     self.current_bet = bet_amount
+                    raiser = i
                     print(f"player bets {bet_amount}")
-                if action == 0:
+                if action == 0: # fold
                     self.folded[i] = True
                     print(f"player folds.")
-                if action == 1:
+                if action == 1: # check/call
                     self.pot += bet_amount
-                    calls[i] += bet_amount
+                    self.bets[i] = bet_amount
                     player.bet(bet_amount)
                     if bet_amount == 0:
                         print(f"player checks")
                     else:
                         print(f"player calls")
-            first = False
+            advance = self.pg()
+        self.reset_bets()
 
     def reset_bets(self):
-        """Resets the bets for each player at the end of the betting round."""
-        for player in self.players:
-            player.reset_bet()
+        for i in range(self.num_players):
+            self.bets[i] = 0
 
     def step(self):
         """Moves the game forward one step through the stages."""
@@ -148,9 +165,10 @@ class Game:
                 best_hand_for_player, hand_score = best_hand_calc(full_hand)
                 if best_hand is None or hand_score > best_hand:
                     best_hand = hand_score
-                    winning_player = player
+                    winning_player = player # this assignemnt doens't work
             print(f"player  wins the pot of {self.pot} chips!") # change this to print winning player
-        winning_player.win(self.pot)
+        # winning_player.win(self.pot)
+        winning_player.balance += self.pot # not tested
         self.pot = 0
         self.dealer_position += 1
 

@@ -23,7 +23,6 @@ def get_suit(num):
     else:
         return "Spades"
 def get_rank(num):
-    print(num)
     if num <11:
         return str(num)
     else:
@@ -75,7 +74,7 @@ class Human(Player):
         #     print("You are in the "+i-idealer+" position.")
         # else:
         #     print("You are in the "+n-(idealer-i)+" position.")
-
+        print("It is player "+str(i)+"'s turn.")
         message = "You have "+str(stack)+" chips in your stack. The stage of the hand is "+stage+", the board is "+board+"and your hand is "+hand+" and there is "+str(pot)+" in the pot."
         print(message)
         if bet == 0:
