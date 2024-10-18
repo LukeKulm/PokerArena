@@ -122,10 +122,11 @@ class Game:
         best_hand = None
         winning_player = None
 
-        for player in self.players:
-            if player.is_folded:
+        for i in self.order:
+            player = self.players[i]
+            if self.folded[i]:
                 continue
-            full_hand = player.hand.get_cards() + self.community_cards.get_cards()
+            full_hand = self.hands[i].get_cards() + self.community_cards.get_cards()
             best_hand_for_player, hand_score = best_hand_calc(full_hand)
             if best_hand is None or hand_score > best_hand:
                 best_hand = hand_score
@@ -138,11 +139,12 @@ class Game:
         state = np.zeros(22, dtype=int)
         state[0] = self.num_players
         state[1] = player_ind
-        state[2] = self.rank_to_num(self.hands[player_ind].get_cards()[0][0]) # first card number
+        cards = self.hands[player_ind].get_cards()
+        state[2] = self.rank_to_num(cards[0]) # first card number
         print(self.hands[player_ind].get_cards()[0][0])
-        state[3] = self.suit_to_num(self.hands[player_ind].get_cards()[0][1]) # first card suit
-        state[4] = self.rank_to_num(self.hands[player_ind].get_cards()[1][0]) # second card number
-        state[5] = self.suit_to_num(self.hands[player_ind].get_cards()[1][1]) # second card suit
+        state[3] = self.suit_to_num(cards[1]) # first card suit
+        state[4] = self.rank_to_num(cards[2]) # second card number
+        state[5] = self.suit_to_num(cards[3]) # second card suit
         state[6] = self.dealer_position
         state[7] = self.stage
         state[8] = self.count_num_folded()
@@ -152,20 +154,19 @@ class Game:
                 state[i] = 0
         elif self.stage == 1:
             for i in range(10, 16, 2):
+                print(self.community_cards)
                 state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10][0])
-                state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-10][1])
+                
             for i in range(16, 20):
                 state[i] = 0
         elif self.stage == 2:
             for i in range(10, 18, 2):
                 state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10][0])
-                state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-10][1])
             for i in range(18, 20):
                 state[i] = 0
         else:
             for i in range(10, 20, 2):
                 state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10][0])
-                state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-10][1])
         state[20] = self.players[player_ind].balance
         state[21] = self.current_bet
         return state
@@ -229,5 +230,9 @@ class Hand:
         self.nums.append(num)
         self.suits.append(suit)
     def get_cards(self):
-        return list(zip(self.nums, self.suits))
+        cards = []
+        for card in list(zip(self.nums, self.suits)):
+            cards.append(card[0])
+            cards.append(card[1])
+        return cards
     
