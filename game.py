@@ -68,7 +68,6 @@ class Game:
             action, bet_amount,  allin = player.act(state)
 
             if action == 2:
-                print("hahhahahhah")
                 self.pot += bet_amount
                 player.bet(bet_amount)
                 self.current_bet = bet_amount
@@ -131,12 +130,13 @@ class Game:
             if self.folded[i]:
                 continue
             full_hand = self.hands[i].get_cards() + self.community_cards.get_cards()
+            print(full_hand)
             best_hand_for_player, hand_score = best_hand_calc(full_hand)
             if best_hand is None or hand_score > best_hand:
                 best_hand = hand_score
                 winning_player = player
                 print(f"player wins the pot of {self.pot} chips!")
-        winning_player.chips += self.pot
+        winning_player.win(self.pot)
         self.pot = 0
 
     def encode(self, player_ind): # player_ind is an index

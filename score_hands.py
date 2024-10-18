@@ -10,9 +10,10 @@ def hand_rank(hand):
     """
     Returns tuple with the hand's rank (category) and the tiebreak info.
     """
-    ranks = sorted(["--23456789TJQKA".index(r) for r, _ in hand], reverse=True)
+
+    ranks = sorted(["--23456789TJQKA".index(hand[i]) for i in range(0, len(hand), 2)], reverse=True)
     rank_counts = Counter(ranks).most_common()
-    is_flush = len(set(s for _, s in hand)) == 1
+    is_flush = len(set(hand[i] for i in range(1, len(hand), 2))) == 1
     is_straight = ranks[0] - ranks[4] == 4 and len(set(ranks)) == 5
 
     if ranks == [14, 5, 4, 3, 2]:  # Account for A-5 straight
@@ -66,10 +67,21 @@ def best_hand_calc(cards):
     if len(cards) < 5:
         raise ScoreHandsError(
             "Cannot calculate best hand with less than 5 cards total.")
-    if len(set(cards)) != len(cards):
-        raise ScoreHandsError(
-            f"Invalid hand. Duplicate cards exits.")
+    # if len(set(cards)) != len(cards):
+    #     raise ScoreHandsError(
+    #         f"Invalid hand. Duplicate cards exits.")
 
     # Calculate best 5 card hand
-    best = max(combinations(cards, 5), key=hand_rank)
+    even_odd_pairs = [(i, i+1) for i in range(0, len(cards)-1, 2)]
+    
+    # Generate combinations of 5 even-odd pairs
+    comb = combinations(even_odd_pairs, 5)
+    
+    result = []
+    for combination in comb:
+        # Flatten the list of pairs into a single list of indices
+        indices = [idx for pair in combination for idx in pair]
+        result.append([cards[i] for i in indices])
+
+    best = max(result, key=hand_rank)
     return best, hand_rank(best)
