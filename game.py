@@ -59,6 +59,7 @@ class Game:
         for i in self.order:
             # current_player = (i + start_position) % self.num_players
             # player = self.players[current_player]
+            self.win_check()
             player = self.players[i]
             if self.folded[i] or player.allin:
                 continue
@@ -93,7 +94,6 @@ class Game:
         print("Dealing hole cards...")
         self.deal_hole_cards()
         self.betting_round()
-        self.win_check()
         
         # Flop: deal first three community cards
         print("Dealing the flop...")
@@ -101,7 +101,6 @@ class Game:
         self.deal_flop()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
-        self.win_check()
         
         # Turn: deal fourth community card
         print("Dealing the turn...")
@@ -109,7 +108,6 @@ class Game:
         self.deal_turn()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
-        self.win_check()
         
         # River: deal fifth community card
         print("Dealing the river...")
@@ -117,7 +115,6 @@ class Game:
         self.deal_river()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
-        self.win_check()
 
         # At the end, we would call a function to determine the winner based on hand strength
         self.determine_winner(True)
@@ -129,22 +126,9 @@ class Game:
                 player = self.players[i]
                 if self.folded[i]:
                     continue
-                print(f"player {i} wins the pot of {self.pot} chips!")
+            print(f"player wins the pot of {self.pot} chips!") # change this to print winning player
         best_hand = None
         winning_player = None
-
-        for i in self.order:
-            player = self.players[i]
-            if self.folded[i]:
-                continue
-            full_hand = self.hands[i].get_cards() + self.community_cards.get_cards()
-            print(full_hand)
-            best_hand_for_player, hand_score = best_hand_calc(full_hand)
-            if best_hand is None or hand_score > best_hand:
-                best_hand = hand_score
-                winning_player = player
-                print(f"player wins the pot of {self.pot} chips!")
-        winning_player.win(self.pot)
         if showdown:
             for i in self.order:
                 player = self.players[i]
@@ -155,7 +139,7 @@ class Game:
                 if best_hand is None or hand_score > best_hand:
                     best_hand = hand_score
                     winning_player = player
-            print(f"player  wins the pot of {self.pot} chips!")
+            print(f"player  wins the pot of {self.pot} chips!") # change this to print winning player
         winning_player.win(self.pot)
         self.pot = 0
         self.dealer_position += 1

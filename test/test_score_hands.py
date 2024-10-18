@@ -25,8 +25,8 @@ def convert_to_correct_format(hand):
 
 class TestBestHandCalc:
     def test_calculates_properly(self):
-        with open(TEST_DATA_PATH, newline='') as csvfile:
-            reader = csv.reader(csvfile)
+        with open(TEST_DATA_PATH, newline='') as file:
+            reader = csv.reader(file)
             data = [row for row in reader]
 
         for hand in data:
