@@ -1,6 +1,7 @@
 # simulates a game of player objects and makes repeated calls to score_hand
 from player import Player
 from score_hands import best_hand_calc
+import numpy as np
 import random
 
 class Game:
@@ -8,6 +9,7 @@ class Game:
     def __init__(self, num_players):
         self.num_players = num_players
         self.players = [Player(f"Player {i+1}") for i in range(num_players)]
+        self.hands = [Hand() for _ in range(num_players)]
         self.dealer_position = 0
         self.community_cards = Hand()
         self.deck = Deck()
@@ -16,7 +18,7 @@ class Game:
 
     def deal_hole_cards(self):
         """Deals two cards to each player."""
-        for player in self.players:
+        for player in self.players: # needs to change
             player.hand.add_card(*self.deck.deal_card())
             player.hand.add_card(*self.deck.deal_card())
 
@@ -34,19 +36,28 @@ class Game:
         self.community_cards.add_card(*self.deck.deal_card())
 
     def betting_round(self):
-        """Simulates a betting round where each player can bet, call, raise, or fold."""
-        for player in self.players:
+        """Simulates a betting round where each player can bet, call/check, or fold."""
+        start_position = (self.dealer_position + 1) % self.num_players
+        for i in range(0, self.num_players):
+            current_player = (i + start_position) % self.num_players
+            player = self.players[current_player]
             if player.is_folded:
                 continue
-            # For simplicity, each player will bet a fixed amount for now
-            try:
-                bet_amount = min(player.chips, 50)  # Placeholder for actual betting strategy
-                self.pot += player.bet(bet_amount)
+            bet_amount, action, allin = player.act()
+            if action == "b":
+                self.pot += bet_amount
+                player.bet(bet_amount)
                 print(f"{player.name} bets {bet_amount}")
-            except ValueError as e:
-                print(e)
+            if action == "f":
                 player.fold()
                 print(f"{player.name} folds.")
+            if action == "c":
+                self.pot += bet_amount
+                player.bet(bet_amount)
+                if bet_amount == 0:
+                    print(f"{player.name} checks")
+                else:
+                    print(f"{player.name} calls")
 
     def reset_bets(self):
         """Resets the bets for each player at the end of the betting round."""
@@ -80,6 +91,7 @@ class Game:
 
         # At the end, we would call a function to determine the winner based on hand strength
         self.determine_winner()
+        self.dealer_position += 1
         
     def determine_winner(self):
         """Determines the winner based on the best hand."""
@@ -97,7 +109,12 @@ class Game:
                 print(f"{winning_player.name} wins the pot of {self.pot} chips!")
         winning_player.chips += self.pot
         self.pot = 0
-    
+
+    def encode(self, player):
+        state = np.zeros(21)
+        state[0] = self.num_players
+        state[1] = player.position #### fill this in
+        state[2] =     
 class Deck:
     """Represents a deck of cards for dealing."""
     def __init__(self):
