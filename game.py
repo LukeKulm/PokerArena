@@ -8,17 +8,27 @@ class Game:
     """Represents the overall poker game."""
     def __init__(self, num_players):
         self.num_players = num_players
-        self.players = [Player(f"Player {i+1}") for i in range(num_players)]
+        self.players = [Player(f"Player {i+1}") for i in range(num_players)] #  wrong
         self.hands = [Hand() for _ in range(num_players)]
         self.dealer_position = 0
+        self.order = self.gen_order()
         self.community_cards = Hand()
         self.deck = Deck()
         self.pot = 0
         self.current_bet = 0
+        self.stage = 0
+
+    def gen_order(self):
+        """generates the order of play based on dealer position""" # for example if dealer is 2 and num_players is 4, order is [3, 0, 1, 2]
+        result = []
+        start = self.dealer_position + 1
+        for i in range(start, start + self.num_players):
+            result.append(i % self.num_players)
+        return result
 
     def deal_hole_cards(self):
         """Deals two cards to each player."""
-        for player in self.players: # needs to change
+        for player in self.players:
             player.hand.add_card(*self.deck.deal_card())
             player.hand.add_card(*self.deck.deal_card())
 
@@ -35,12 +45,14 @@ class Game:
         """Deals the fifth community card (the river)."""
         self.community_cards.add_card(*self.deck.deal_card())
 
-    def betting_round(self):
+    def betting_round(self): # TODO: change acting order based on self.order
         """Simulates a betting round where each player can bet, call/check, or fold."""
-        start_position = (self.dealer_position + 1) % self.num_players
-        for i in range(0, self.num_players):
-            current_player = (i + start_position) % self.num_players
-            player = self.players[current_player]
+        # start_position = (self.dealer_position + 1) % self.num_players
+        # for i in range(0, self.num_players):
+        for i in self.order:
+            # current_player = (i + start_position) % self.num_players
+            # player = self.players[current_player]
+            player = self.players[i]
             if player.is_folded:
                 continue
             bet_amount, action, allin = player.act()
@@ -73,18 +85,21 @@ class Game:
         
         # Flop: deal first three community cards
         print("Dealing the flop...")
+        self.stage = 1
         self.deal_flop()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
         
         # Turn: deal fourth community card
         print("Dealing the turn...")
+        self.stage = 2
         self.deal_turn()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
         
         # River: deal fifth community card
         print("Dealing the river...")
+        self.stage = 3
         self.deal_river()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
@@ -110,11 +125,47 @@ class Game:
         winning_player.chips += self.pot
         self.pot = 0
 
-    def encode(self, player):
-        state = np.zeros(21)
+    def encode(self, player_ind): # player_ind is an index
+        state = np.zeros(21, dtype=int)
         state[0] = self.num_players
-        state[1] = player.position #### fill this in
-        state[2] =     
+        state[1] = player_ind
+        state[2] = self.hands[player_ind].get_cards()[0][0] # first card number
+        state[3] = self.hands[player_ind].get_cards()[0][1] # first card suit
+        state[4] = self.hands[player_ind].get_cards()[1][0] # second card number
+        state[5] = self.hands[player_ind].get_cards()[1][1] # second card suit
+        state[6] = self.dealer_position
+        state[7] = self.stage
+        state[8] = self.count_num_folded()
+        state[9] = self.pot
+        if self.stage == 0:
+            for i in range(10, 20):
+                state[i] = 0
+        elif self.stage == 1:
+            for i in range(10, 16, 2):
+                state[i] = self.community_cards.get_cards()[i-10][0]
+                state[i+1] = self.community_cards.get_cards()[i-10][1]
+            for i in range(16, 20):
+                state[i] = 0
+        elif self.stage == 2:
+            for i in range(10, 18, 2):
+                state[i] = self.community_cards.get_cards()[i-10][0]
+                state[i+1] = self.community_cards.get_cards()[i-10][1] 
+            for i in range(18, 20):
+                state[i] = 0
+        else:
+            for i in range(10, 20, 2):
+                state[i] = self.community_cards.get_cards()[i-10][0]
+                state[i+1] = self.community_cards.get_cards()[i-10][1]
+        state[20] = self.num_chips[player_ind] # need a stacks attribute
+        state[21] = self.current_bet
+
+    def count_num_folded(self):
+        count = 0
+        for player in self.players:
+            if player.is_folded:
+                count += 1
+        return count
+
 class Deck:
     """Represents a deck of cards for dealing."""
     def __init__(self):
