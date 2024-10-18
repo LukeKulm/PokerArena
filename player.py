@@ -123,6 +123,7 @@ class Random(Player):
     def __init__(self, balance):
         self.balance = balance
         self.folded = False
+        self.allin = False
     def act(self, state):
         bet = state[21]
         if bet == 0:
@@ -144,10 +145,12 @@ class Random(Player):
                 if bet<self.balance:
                     return (1, bet, 0)
                 else:
+                    self.allin = True
                     return (1, self.balance, 1)
             else:
                 amm = random.randint(0, self.balance) #randomly select amount below balance
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
+                    self.allin = True
                     return  (2, self.balance, 1)
