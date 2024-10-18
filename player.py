@@ -1,5 +1,6 @@
 # interface for players and some instances including "user entry"
 
+import random
 from abc import ABC, abstractmethod
 
 class Player(ABC):
@@ -108,6 +109,39 @@ class Human(Player):
                 amm = 0
                 while amm <=0 or amm > self.balance or amm<2*bet:
                     amm = input("how much do you want to raise by")
+                if amm < self.balance:
+                    return (2, amm, 0)
+                else:
+                    return  (2, self.balance, 1)
+                
+class Random(Player):
+    def __init__(self, balance):
+        self.balance = balance
+        self.folded = False
+    def act(self, state):
+        bet = state[21]
+        if bet == 0:
+            move = random.choice(['c', 'r']) #randomly choose check or raise
+            if move == 'c':
+                return (1, 0, 0)
+            else:
+                amm = random.randint(0, self.balance) #randomly select amount below balance
+                if amm < self.balance:
+                    return (2, amm, 0)
+                else:
+                    return  (2, self.balance, 1)
+            
+        else:
+            move = random.choice(['f', 'c', 'r']) #randomly choose one of the three moves
+            if move == 'f':
+                return (0, 0,  0)
+            elif move == 'c':
+                if bet<self.balance:
+                    return (1, bet, 0)
+                else:
+                    return (1, self.balance, 1)
+            else:
+                amm = random.randint(0, self.balance) #randomly select amount below balance
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
