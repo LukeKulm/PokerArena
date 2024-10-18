@@ -32,7 +32,13 @@ class Game:
         for i in range(start, start + self.num_players):
             result.append(i % self.num_players)
         return result
-
+    def pot_good(self, calls):
+        for i in range(self.num_players):
+            if self.folded[i] or self.current_bet == calls[i] or self.players[i].allin:
+                pass
+            else:
+                return False
+        return True
     def deal_hole_cards(self):
         """Deals two cards to each player."""
         self.folded = [False]*self.num_players
@@ -56,32 +62,41 @@ class Game:
         """Simulates a betting round where each player can bet, call/check, or fold."""
         # start_position = (self.dealer_position + 1) % self.num_players
         # for i in range(0, self.num_players):
-        for i in self.order:
-            # current_player = (i + start_position) % self.num_players
-            # player = self.players[current_player]
-            self.win_check()
-            player = self.players[i]
-            if self.folded[i] or player.allin:
-                continue
-            state = self.encode(i)
+        calls = [0]*self.num_players
+        first = True
+        while not self.pot_good(calls) or first:
             
-            action, bet_amount,  allin = player.act(state)
+            for i in self.order:
+                if self.pot_good(calls) and not first:
+                    break
+                # current_player = (i + start_position) % self.num_players
+                # player = self.players[current_player]
+                self.win_check()
+                player = self.players[i]
+                if self.folded[i] or player.allin:
+                    continue
+                state = self.encode(i)
+                
+                action, bet_amount,  allin = player.act(state)
 
-            if action == 2:
-                self.pot += bet_amount
-                player.bet(bet_amount)
-                self.current_bet = bet_amount
-                print(f"player bets {bet_amount}")
-            if action == 0:
-                self.folded[i] = True
-                print(f"player folds.")
-            if action == 1:
-                self.pot += bet_amount
-                player.bet(bet_amount)
-                if bet_amount == 0:
-                    print(f"player checks")
-                else:
-                    print(f"player calls")
+                if action == 2:
+                    self.pot += bet_amount
+                    calls[i] += bet_amount
+                    player.bet(bet_amount)
+                    self.current_bet = bet_amount
+                    print(f"player bets {bet_amount}")
+                if action == 0:
+                    self.folded[i] = True
+                    print(f"player folds.")
+                if action == 1:
+                    self.pot += bet_amount
+                    calls[i] += bet_amount
+                    player.bet(bet_amount)
+                    if bet_amount == 0:
+                        print(f"player checks")
+                    else:
+                        print(f"player calls")
+            first = False
 
     def reset_bets(self):
         """Resets the bets for each player at the end of the betting round."""
