@@ -1,0 +1,33 @@
+import csv
+import score_hands
+
+TEST_DATA_PATH = "/Users/colebreen/Desktop/4701 Project/JK_LCMJ_ctb93_jcs547_lbk73_mmw243/data/poker_hands/poker-hand-training-true.data"
+
+suit_map_to_our_encoding = {"1": "c", "2": "d", "3": "h", "4": "s"}
+card_map_to_our_encoding = {"1": "A", "13": "K", "12": "Q", "11": "J", "10": "T",
+                            "9": "9", "8": "8", "7": "7", "6": "6", "5": "5",
+                            "4": "4", "3": "3", "2": "2"}
+
+
+def convert_to_correct_format(hand):
+    cards = []
+
+    for i in range((len(hand)-1)//2):
+        first = 2 * i
+        second = 2 * i + 1
+        suit = suit_map_to_our_encoding[hand[first]]
+        number = card_map_to_our_encoding[hand[second]]
+        cards.append((number, suit))
+
+    return cards
+
+
+class TestBestHandCalc:
+    def test_calculates_properly(self):
+        with open(TEST_DATA_PATH, newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            data = [row for row in reader]
+
+        for hand in data:
+            res = score_hands.best_hand_calc(convert_to_correct_format(hand))
+            assert (res[1][0] - 1) == int(hand[-1])
