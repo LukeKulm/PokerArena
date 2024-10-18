@@ -133,7 +133,6 @@ class Game:
                 print(f"player {i} wins the pot of {self.pot} chips!")
         best_hand = None
         winning_player = None
-<<<<<<< HEAD
 
         for i in self.order:
             player = self.players[i]
@@ -147,7 +146,6 @@ class Game:
                 winning_player = player
                 print(f"player wins the pot of {self.pot} chips!")
         winning_player.win(self.pot)
-=======
         if showdown:
             for i in self.order:
                 player = self.players[i]
@@ -158,9 +156,8 @@ class Game:
                 if best_hand is None or hand_score > best_hand:
                     best_hand = hand_score
                     winning_player = player
-                print(f"player {i} wins the pot of {self.pot} chips!")
-        winning_player.chips += self.pot
->>>>>>> 7a2800d8f85c8d81f8b467e9e744fcda067675b5
+            print(f"player  wins the pot of {self.pot} chips!")
+        winning_player.win(self.pot)
         self.pot = 0
         self.dealer_position += 1
 
