@@ -58,7 +58,8 @@ class Game:
             player = self.players[i]
             if player.is_folded:
                 continue
-            bet_amount, action, allin = player.act()
+            state = self.encode(i)
+            bet_amount, action, allin = player.act(state)
             if action == "b":
                 self.pot += bet_amount
                 player.bet(bet_amount)
