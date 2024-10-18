@@ -22,6 +22,7 @@ def get_suit(num):
     else:
         return "Spades"
 def get_rank(num):
+    print(num)
     if num <11:
         return str(num)
     else:
@@ -105,7 +106,7 @@ class Human(Player):
                     return (1, self.balance, 1)
             else:
                 amm = 0
-                while amm <=0 or amm > self.balance:
+                while amm <=0 or amm > self.balance or amm<2*bet:
                     amm = input("how much do you want to raise by")
                 if amm < self.balance:
                     return (2, amm, 0)

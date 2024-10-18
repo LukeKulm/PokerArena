@@ -1,5 +1,5 @@
 # simulates a game of player objects and makes repeated calls to score_hand
-from player import Player
+import player
 from score_hands import best_hand_calc
 import numpy as np
 import random
@@ -11,7 +11,7 @@ class Game:
         # self.players = [Player(f"Player {i+1}") for i in range(num_players)] #  wrong
         self.players = []
         for i in range(num_players):
-            self.players.append(Player(200))
+            self.players.append(player.Human(200))
         self.hands = [Hand() for _ in range(num_players)]
         self.dealer_position = 0
         self.order = self.gen_order()
@@ -23,6 +23,7 @@ class Game:
         self.sb = 1
         self.bb = 2
         self.stacksize = self.bb * 100
+        self.folded = [False]*num_players
 
     def gen_order(self):
         """generates the order of play based on dealer position""" # for example if dealer is 2 and num_players is 4, order is [3, 0, 1, 2]
@@ -34,9 +35,10 @@ class Game:
 
     def deal_hole_cards(self):
         """Deals two cards to each player."""
-        for player in self.players:
-            player.hand.add_card(*self.deck.deal_card())
-            player.hand.add_card(*self.deck.deal_card())
+        self.folded = [False]*self.num_players
+        for hand in self.hands:
+            hand.add_card(*self.deck.deal_card())
+            hand.add_card(*self.deck.deal_card())
 
     def deal_flop(self):
         """Deals the first three community cards (the flop)."""
@@ -59,7 +61,7 @@ class Game:
             # current_player = (i + start_position) % self.num_players
             # player = self.players[current_player]
             player = self.players[i]
-            if player.is_folded:
+            if self.folded[i]:
                 continue
             state = self.encode(i)
             bet_amount, action, allin = player.act(state)
@@ -68,7 +70,7 @@ class Game:
                 player.bet(bet_amount)
                 print(f"{player.name} bets {bet_amount}")
             if action == "f":
-                player.fold()
+                self.folded[i] = True
                 print(f"{player.name} folds.")
             if action == "c":
                 self.pot += bet_amount
@@ -137,6 +139,7 @@ class Game:
         state[0] = self.num_players
         state[1] = player_ind
         state[2] = self.rank_to_num(self.hands[player_ind].get_cards()[0][0]) # first card number
+        print(self.hands[player_ind].get_cards()[0][0])
         state[3] = self.suit_to_num(self.hands[player_ind].get_cards()[0][1]) # first card suit
         state[4] = self.rank_to_num(self.hands[player_ind].get_cards()[1][0]) # second card number
         state[5] = self.suit_to_num(self.hands[player_ind].get_cards()[1][1]) # second card suit
@@ -169,8 +172,8 @@ class Game:
 
     def count_num_folded(self):
         count = 0
-        for player in self.players:
-            if player.is_folded:
+        for player in self.folded:
+            if player:
                 count += 1
         return count
     
@@ -199,11 +202,21 @@ class Game:
 class Deck:
     """Represents a deck of cards for dealing."""
     def __init__(self):
-        self.cards_available = [(rank, suit) for rank in "23456789TJQKA" for suit in "cdhs"]
-        random.shuffle(self.cards_available)
+        self.deck = []
+        for suit in "hdcs":
+            for num in "23456789TJQKA":
+                self.deck.append((num, suit))
     
     def deal_card(self):
-        return self.cards_available.pop()
+        i = random.randint(0, len(self.deck)-1)
+        print("there are "+str(len(self.deck))+" cards in the deck and we chose the "+str(i)+" one.")
+
+        old = self.deck
+        self.deck = []
+        for j in range(len(old)):
+            if j!=i:
+                self.deck.append(old[j])
+        return old[i]
         
 
 class Hand:
