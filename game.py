@@ -58,10 +58,8 @@ class Game:
     def deal_river(self):
         """Deals the fifth community card (the river)."""
         self.community_cards.add_card(*self.deck.deal_card())
-    def betting_round(self): # TODO: change acting order based on self.order
+    def betting_round(self):
         """Simulates a betting round where each player can bet, call/check, or fold."""
-        # start_position = (self.dealer_position + 1) % self.num_players
-        # for i in range(0, self.num_players):
         calls = [0]*self.num_players
         first = True
         while not self.pot_good(calls) or first:
@@ -69,8 +67,6 @@ class Game:
             for i in self.order:
                 if self.pot_good(calls) and not first:
                     break
-                # current_player = (i + start_position) % self.num_players
-                # player = self.players[current_player]
                 self.win_check()
                 player = self.players[i]
                 if self.folded[i] or player.allin:
@@ -131,7 +127,6 @@ class Game:
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
 
-        # At the end, we would call a function to determine the winner based on hand strength
         self.determine_winner(True)
         
     def determine_winner(self, showdown):
