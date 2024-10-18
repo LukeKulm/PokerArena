@@ -141,7 +141,6 @@ class Game:
         state[1] = player_ind
         cards = self.hands[player_ind].get_cards()
         state[2] = self.rank_to_num(cards[0]) # first card number
-        print(self.hands[player_ind].get_cards()[0][0])
         state[3] = self.suit_to_num(cards[1]) # first card suit
         state[4] = self.rank_to_num(cards[2]) # second card number
         state[5] = self.suit_to_num(cards[3]) # second card suit
@@ -155,18 +154,21 @@ class Game:
         elif self.stage == 1:
             for i in range(10, 16, 2):
                 print(self.community_cards)
-                state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10][0])
+                state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10])
+                state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-9])
                 
             for i in range(16, 20):
                 state[i] = 0
         elif self.stage == 2:
             for i in range(10, 18, 2):
-                state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10][0])
+                state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10])
+                state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-9])
             for i in range(18, 20):
                 state[i] = 0
         else:
             for i in range(10, 20, 2):
-                state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10][0])
+                state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10])
+                state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-9])
         state[20] = self.players[player_ind].balance
         state[21] = self.current_bet
         return state
