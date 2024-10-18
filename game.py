@@ -8,7 +8,10 @@ class Game:
     """Represents the overall poker game."""
     def __init__(self, num_players):
         self.num_players = num_players
-        self.players = [Player(f"Player {i+1}") for i in range(num_players)] #  wrong
+        # self.players = [Player(f"Player {i+1}") for i in range(num_players)] #  wrong
+        self.players = []
+        for i in range(num_players):
+            self.players.append(Player(200))
         self.hands = [Hand() for _ in range(num_players)]
         self.dealer_position = 0
         self.order = self.gen_order()
