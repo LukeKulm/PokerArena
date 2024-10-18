@@ -1,6 +1,6 @@
 # simulates a game of player objects and makes repeated calls to score_hand
 
-Class Hand:
+class Hand:
     def __init__(self):
         self.nums = []
         self.suits = []
