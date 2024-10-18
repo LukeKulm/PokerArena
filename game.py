@@ -7,4 +7,6 @@ class Hand:
     def add_card(self, num, suit):
         self.nums+=num
         self.suits+=suit
+    def get_cards(self):
+        return list(zip(self.nums, self.suits))
     
