@@ -36,19 +36,28 @@ class Game:
         self.community_cards.add_card(*self.deck.deal_card())
 
     def betting_round(self):
-        """Simulates a betting round where each player can bet, call, raise, or fold."""
-        for player in self.players:
+        """Simulates a betting round where each player can bet, call/check, or fold."""
+        start_position = (self.dealer_position + 1) % self.num_players
+        for i in range(0, self.num_players):
+            current_player = (i + start_position) % self.num_players
+            player = self.players[current_player]
             if player.is_folded:
                 continue
-            # For simplicity, each player will bet a fixed amount for now
-            try:
-                bet_amount = min(player.chips, 50)  # Placeholder for actual betting strategy
-                self.pot += player.bet(bet_amount)
+            bet_amount, action, allin = player.act()
+            if action == "b":
+                self.pot += bet_amount
+                player.bet(bet_amount)
                 print(f"{player.name} bets {bet_amount}")
-            except ValueError as e:
-                print(e)
+            if action == "f":
                 player.fold()
                 print(f"{player.name} folds.")
+            if action == "c":
+                self.pot += bet_amount
+                player.bet(bet_amount)
+                if bet_amount == 0:
+                    print(f"{player.name} checks")
+                else:
+                    print(f"{player.name} calls")
 
     def reset_bets(self):
         """Resets the bets for each player at the end of the betting round."""
@@ -82,6 +91,7 @@ class Game:
 
         # At the end, we would call a function to determine the winner based on hand strength
         self.determine_winner()
+        self.dealer_position += 1
         
     def determine_winner(self):
         """Determines the winner based on the best hand."""
