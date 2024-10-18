@@ -17,6 +17,9 @@ class Game:
         self.pot = 0
         self.current_bet = 0
         self.stage = 0
+        self.sb = 1
+        self.bb = 2
+        self.stacksize = self.bb * 100
 
     def gen_order(self):
         """generates the order of play based on dealer position""" # for example if dealer is 2 and num_players is 4, order is [3, 0, 1, 2]
@@ -126,13 +129,13 @@ class Game:
         self.pot = 0
 
     def encode(self, player_ind): # player_ind is an index
-        state = np.zeros(21, dtype=int)
+        state = np.zeros(22, dtype=int)
         state[0] = self.num_players
         state[1] = player_ind
-        state[2] = self.hands[player_ind].get_cards()[0][0] # first card number
-        state[3] = self.hands[player_ind].get_cards()[0][1] # first card suit
-        state[4] = self.hands[player_ind].get_cards()[1][0] # second card number
-        state[5] = self.hands[player_ind].get_cards()[1][1] # second card suit
+        state[2] = self.rank_to_num(self.hands[player_ind].get_cards()[0][0]) # first card number
+        state[3] = self.suit_to_num(self.hands[player_ind].get_cards()[0][1]) # first card suit
+        state[4] = self.rank_to_num(self.hands[player_ind].get_cards()[1][0]) # second card number
+        state[5] = self.suit_to_num(self.hands[player_ind].get_cards()[1][1]) # second card suit
         state[6] = self.dealer_position
         state[7] = self.stage
         state[8] = self.count_num_folded()
@@ -142,22 +145,23 @@ class Game:
                 state[i] = 0
         elif self.stage == 1:
             for i in range(10, 16, 2):
-                state[i] = self.community_cards.get_cards()[i-10][0]
-                state[i+1] = self.community_cards.get_cards()[i-10][1]
+                state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10][0])
+                state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-10][1])
             for i in range(16, 20):
                 state[i] = 0
         elif self.stage == 2:
             for i in range(10, 18, 2):
-                state[i] = self.community_cards.get_cards()[i-10][0]
-                state[i+1] = self.community_cards.get_cards()[i-10][1] 
+                state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10][0])
+                state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-10][1])
             for i in range(18, 20):
                 state[i] = 0
         else:
             for i in range(10, 20, 2):
-                state[i] = self.community_cards.get_cards()[i-10][0]
-                state[i+1] = self.community_cards.get_cards()[i-10][1]
-        state[20] = self.num_chips[player_ind] # need a stacks attribute
+                state[i] = self.rank_to_num(self.community_cards.get_cards()[i-10][0])
+                state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-10][1])
+        state[20] = self.players[player_ind].balance
         state[21] = self.current_bet
+        return state
 
     def count_num_folded(self):
         count = 0
@@ -165,6 +169,28 @@ class Game:
             if player.is_folded:
                 count += 1
         return count
+    
+    def rank_to_num(self, rank):
+        if rank == "T":
+            return 10
+        if rank == "J":
+            return 11
+        if rank == "Q":
+            return 12
+        if rank == "K":
+            return 13
+        else: # ace
+            return 14
+    
+    def suit_to_num(self, suit):
+        if suit == "c":
+            return 0
+        if suit == "d":
+            return 1
+        if suit == "h":
+            return 2
+        else: # spade
+            return 3
 
 class Deck:
     """Represents a deck of cards for dealing."""
@@ -181,8 +207,8 @@ class Hand:
         self.nums = []
         self.suits = []
     def add_card(self, num, suit):
-        self.nums+=num
-        self.suits+=suit
+        self.nums.append(num)
+        self.suits.append(suit)
     def get_cards(self):
         return list(zip(self.nums, self.suits))
     
