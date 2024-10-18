@@ -66,21 +66,3 @@ def best_hand_calc(cards):
     # Generate all 5-card combinations
     best = max(combinations(cards, 5), key=hand_rank)
     return best, hand_rank(best)
-
-
-def compare_hands(hand1, hand2, community_cards):
-    """
-    Compares two hands (each with 2 cards) plus the community cards to determine the winner.
-    """
-    full_hand1 = hand1.get_cards() + community_cards.get_cards()
-    full_hand2 = hand2.get_cards() + community_cards.get_cards()
-
-    _, score1 = best_hand(full_hand1)
-    _, score2 = best_hand(full_hand2)
-    
-    if score1 > score2:
-        return "Hand 1 wins"
-    elif score2 > score1:
-        return "Hand 2 wins"
-    else:
-        return "It's a tie!"
