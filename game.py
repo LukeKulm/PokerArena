@@ -1,0 +1,1 @@
+# simulates a game of player objects and makes repeated calls to score_hand

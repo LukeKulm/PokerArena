@@ -1,0 +1,1 @@
+# interface for players and some instances including "user entry"
