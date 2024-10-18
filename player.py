@@ -57,6 +57,7 @@ class Human(Player):
     def __init__(self, balance):
         self.balance = balance
         self.folded = False
+        self.allin = False
     def act(self, state):
         n = state[0]
         i  = state[1]
@@ -80,38 +81,42 @@ class Human(Player):
         if bet == 0:
             move = "x"
             while move not in "fcr":
-                move = input("enter f to fold, c to check, r to raise")
+                move = input("enter f to fold, c to check, r to raise: ")
             if move == 'f':
                 return (0, 0,  0)
             elif move == 'c':
                 return (1, 0, 0)
             else:
                 amm = 0
-                while amm <=0 or amm > self.balance:
-                    amm = input("how much do you want to raise by")
+                while int(amm) <=0 or int(amm) > self.balance:
+                    amm = int(input("how much do you want to raise by: "))
+                
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
+                    self.allin = True
                     return  (2, self.balance, 1)
             
         else:
             move = "x"
             while move not in "fcr":
-                move = input("enter f to fold, c to call, r to raise")
+                move = input("enter f to fold, c to call, r to raise: ")
             if move == 'f':
                 return (0, 0,  0)
             elif move == 'c':
                 if bet<self.balance:
                     return (1, bet, 0)
                 else:
+                    self.allin = True
                     return (1, self.balance, 1)
             else:
                 amm = 0
-                while amm <=0 or amm > self.balance or amm<2*bet:
-                    amm = input("how much do you want to raise by")
+                while int(amm) <=0 or int(amm) > self.balance or int(amm)<2*bet:
+                    amm = int(input("how much do you want to raise by: "))
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
+                    self.allin = True
                     return  (2, self.balance, 1)
                 
 class Random(Player):

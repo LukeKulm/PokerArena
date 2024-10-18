@@ -61,24 +61,28 @@ class Game:
             # current_player = (i + start_position) % self.num_players
             # player = self.players[current_player]
             player = self.players[i]
-            if self.folded[i]:
+            if self.folded[i] or player.allin:
                 continue
             state = self.encode(i)
-            bet_amount, action, allin = player.act(state)
-            if action == "b":
+            
+            action, bet_amount,  allin = player.act(state)
+
+            if action == 2:
+                print("hahhahahhah")
                 self.pot += bet_amount
                 player.bet(bet_amount)
-                print(f"{player.name} bets {bet_amount}")
-            if action == "f":
+                self.current_bet = bet_amount
+                print(f"player bets {bet_amount}")
+            if action == 0:
                 self.folded[i] = True
-                print(f"{player.name} folds.")
-            if action == "c":
+                print(f"player folds.")
+            if action == 1:
                 self.pot += bet_amount
                 player.bet(bet_amount)
                 if bet_amount == 0:
-                    print(f"{player.name} checks")
+                    print(f"player checks")
                 else:
-                    print(f"{player.name} calls")
+                    print(f"player calls")
 
     def reset_bets(self):
         """Resets the bets for each player at the end of the betting round."""
@@ -131,7 +135,7 @@ class Game:
             if best_hand is None or hand_score > best_hand:
                 best_hand = hand_score
                 winning_player = player
-                print(f"{winning_player.name} wins the pot of {self.pot} chips!")
+                print(f"player wins the pot of {self.pot} chips!")
         winning_player.chips += self.pot
         self.pot = 0
 
