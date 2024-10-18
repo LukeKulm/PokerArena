@@ -21,45 +21,45 @@ def hand_rank(hand):
 
     # Royal Flush
     if is_flush and ranks == [14, 13, 12, 11, 10]:
-        return (10,)  # Highest rank
+        return (10,)
     
     # Straight Flush
     if is_flush and is_straight:
-        return (9, ranks[0])  # Straight flush, tiebreaker is the top card
+        return (9, ranks[0])
     
     # Four of a Kind
     if rank_counts[0][1] == 4:
-        return (8, rank_counts[0][0], rank_counts[1][0])  # Four of a kind, tiebreaker
+        return (8, rank_counts[0][0], rank_counts[1][0]) 
     
     # Full House
     if rank_counts[0][1] == 3 and rank_counts[1][1] == 2:
-        return (7, rank_counts[0][0], rank_counts[1][0])  # Full house
+        return (7, rank_counts[0][0], rank_counts[1][0])
     
     # Flush
     if is_flush:
-        return (6, ranks)  # Flush
+        return (6, ranks)
     
     # Straight
     if is_straight:
-        return (5, ranks[0])  # Straight
+        return (5, ranks[0])
     
     # Three of a Kind
     if rank_counts[0][1] == 3:
-        return (4, rank_counts[0][0], ranks)  # Three of a kind
+        return (4, rank_counts[0][0], ranks)
     
     # Two Pair
     if rank_counts[0][1] == 2 and rank_counts[1][1] == 2:
-        return (3, rank_counts[0][0], rank_counts[1][0], ranks)  # Two pair
+        return (3, rank_counts[0][0], rank_counts[1][0], ranks)
     
     # One Pair
     if rank_counts[0][1] == 2:
-        return (2, rank_counts[0][0], ranks)  # One pair
+        return (2, rank_counts[0][0], ranks)
     
     # High Card
-    return (1, ranks)  # High card
+    return (1, ranks)
 
 
-def best_hand(cards):
+def best_hand_calc(cards):
     """
     Takes a list of 7 cards (5 community + 2 from player's hand) and returns the best 5-card hand.
     """
