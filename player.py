@@ -37,10 +37,11 @@ def get_rank(num):
 def decode_cards(lis):
     ans = ""
     for i in range(0,  len(lis), 2):
-        ans+= get_rank(lis[i])
-        ans+=" "
-        ans+= get_suit(lis[i+1])
-        ans+=", "
+        if lis[i] != 0:
+            ans+= get_rank(lis[i])
+            ans+=" "
+            ans+= get_suit(lis[i+1])
+            ans+=", "
     return ans
 def decode_stage(num):
     if num == 0:
@@ -78,7 +79,8 @@ class Human(Player):
         print("\nIt is player "+str(i)+"'s turn.")
         print("You have "+str(stack)+" chips in your stack.")
         print("The stage of the hand is "+stage)
-        print("The board is "+board[:-2]+".")
+        if stage!= "Preflop":
+            print("The board is "+board[:-2]+".")
         print("Your hand is "+hand[:-2]+".")
         print("There is "+str(pot)+" in the pot.")
         
