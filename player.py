@@ -75,8 +75,12 @@ class Human(Player):
         # else:
         #     print("You are in the "+n-(idealer-i)+" position.")
         print("It is player "+str(i)+"'s turn.")
-        message = "You have "+str(stack)+" chips in your stack. The stage of the hand is "+stage+", the board is "+board+"and your hand is "+hand+" and there is "+str(pot)+" in the pot."
-        print(message)
+        print("You have "+str(stack)+" chips in your stack.")
+        print("The stage of the hand is "+stage)
+        print("The board is "+board[:-2]+".")
+        print("Your hand is "+hand[:-2]+".")
+        print("There is "+str(pot)+" in the pot.")
+        
         if bet == 0:
             move = "x"
             while move not in "fcr":

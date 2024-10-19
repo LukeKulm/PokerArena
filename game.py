@@ -257,7 +257,7 @@ class Deck:
     
     def deal_card(self):
         i = random.randint(0, len(self.deck)-1)
-        print("there are "+str(len(self.deck))+" cards in the deck and we chose the "+str(i)+" one.")
+        # print("there are "+str(len(self.deck))+" cards in the deck and we chose the "+str(i)+" one.")
 
         old = self.deck
         self.deck = []
