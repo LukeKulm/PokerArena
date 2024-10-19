@@ -68,6 +68,7 @@ class Game:
         self.community_cards.wipe()
         self.deck.wipe()
         for hand in self.hands:
+            hand.wipe()
             hand.add_card(*self.deck.deal_card())
             hand.add_card(*self.deck.deal_card())
 

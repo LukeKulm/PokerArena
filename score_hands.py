@@ -72,6 +72,7 @@ def best_hand_calc(cards):
     for i in range(0, len(cards) - 1, 2):
         pair = (cards[i], cards[i + 1])
         if pair in seen_pairs:
+            print(cards)
             raise ScoreHandsError(
             f"Invalid hand. Duplicate cards exits.")
         seen_pairs[pair] = True
