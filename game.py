@@ -160,6 +160,7 @@ class Game:
         """Moves the game forward one step through the stages."""
         # Pre-flop: deal hole cards and start betting
         self.over = False
+        self.pot = 0
         print("Dealing hole cards...")
         self.deal_hole_cards()
         self.stage = 0

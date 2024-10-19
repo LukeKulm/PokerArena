@@ -151,7 +151,7 @@ class Random(Player):
         self.allin = False
 
     def act(self, state):
-        bet = state[21]
+        bet = state[21]-state[22]
         if bet == 0:
             move = random.choice(['c', 'r'])  # randomly choose check or raise
             if move == 'c':
@@ -165,6 +165,7 @@ class Random(Player):
                     return (2, self.balance, 1)
 
         else:
+              
             # randomly choose one of the three moves
             move = random.choice(['f', 'c', 'r'])
             if move == 'f':
