@@ -136,6 +136,9 @@ class Game:
                 if action == 0:  # fold
                     self.folded[i] = True
                     print(f"player {i} folds.")
+                    if self.win_check():
+                        advance = True
+                        break
                 if action == 1:  # check/call
                     self.pot += bet_amount
                     self.bets[i] += bet_amount
@@ -144,7 +147,9 @@ class Game:
                         print(f"player checks")
                     else:
                         print(f"player calls")
-            advance = self.pg()
+                self.win_check()
+            if not advance:
+                advance = self.pg()
         self.reset_bets()
 
     def reset_bets(self):
@@ -154,25 +159,30 @@ class Game:
     def step(self):
         """Moves the game forward one step through the stages."""
         # Pre-flop: deal hole cards and start betting
+        self.over = False
+        self.pot = 0
         print("Dealing hole cards...")
         self.deal_hole_cards()
         self.stage = 0
         self.betting_round()
-
+        if self.over:
+            return
         # Flop: deal first three community cards
         print("Dealing the flop...")
         self.stage = 1
         self.deal_flop()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
-
+        if self.over:
+            return
         # Turn: deal fourth community card
         print("Dealing the turn...")
         self.stage = 2
         self.deal_turn()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
-
+        if self.over:
+            return
         # River: deal fifth community card
         print("Dealing the river...")
         self.stage = 3
@@ -184,6 +194,7 @@ class Game:
 
     def determine_winner(self, showdown):
         """Determines the winner based on the best hand."""
+        self.over = True
         if not showdown:
             winning_player_idx = None
             for i in self.order:
@@ -225,6 +236,7 @@ class Game:
         # else, continue to showdown
         if self.count_num_folded() == self.num_players - 1:
             self.determine_winner(False)
+            return True
 
     def encode(self, player_ind):  # player_ind is an index
         state = np.zeros(23, dtype=int)
