@@ -3,3 +3,13 @@ This is a repo to train an AI agent to play poker \
 Currently our state for a game does not represent all players betting history. This is done to 
 simplify the state representation and there is still strategy involved even if you do not know
 what each specific player bet. We can update this in the future if we want a more advanced AI.
+
+TODO for submission today:
+    fix reraise bug
+    find out where hand object is being printed to console and remove it
+    get rid of printing "0 Hearts" if the card hasn't been dealt yet (easy fix)
+    unit testing
+    writeup
+        readme
+        comments/structuring
+        demo plan
