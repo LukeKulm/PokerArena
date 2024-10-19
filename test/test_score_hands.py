@@ -18,7 +18,8 @@ def convert_to_correct_format(hand):
         second = 2 * i + 1
         suit = suit_map_to_our_encoding[hand[first]]
         number = card_map_to_our_encoding[hand[second]]
-        cards.append((number, suit))
+        cards.append(number)
+        cards.append(suit)
 
     return cards
 
@@ -39,7 +40,7 @@ class TestBestHandCalc:
             score_hands.best_hand_calc(hands)
 
     def test_same_card_included_twice(self):
-        hands = [("2", "c"), ("2", "c"), ("3", "c"), ("4", "c"),
-                 ("5", "c"), ("6", "c"), ("7", "c"), ]
+        hands = ["2", "c", "2", "c", "3", "c", "4", "c",
+                 "5", "c", "6", "c", "7", "c" ]
         with pytest.raises(score_hands.ScoreHandsError, match="Invalid hand. Duplicate cards exits."):
             score_hands.best_hand_calc(hands)

@@ -7,7 +7,7 @@ what each specific player bet. We can update this in the future if we want a mor
 TODO for submission today:
     fix reraise bug
     find out where hand object is being printed to console and remove it
-    get rid of printing "0 Hearts" if the card hasn't been dealt yet (easy fix)
+    get rid of printing "0 Hearts" if the card hasn't been dealt yet (easy fix) (DONE)
     unit testing
     writeup
         readme

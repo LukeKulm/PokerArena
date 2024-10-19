@@ -6,7 +6,7 @@ import random
 
 class Game:
     """Represents the overall poker game."""
-    def __init__(self, players, start):
+    def __init__(self, players, start=200):
         self.num_players = len(players)
         # self.players = [Player(f"Player {i+1}") for i in range(num_players)] #  wrong
         self.players = []

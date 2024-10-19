@@ -67,9 +67,15 @@ def best_hand_calc(cards):
     if len(cards) < 5:
         raise ScoreHandsError(
             "Cannot calculate best hand with less than 5 cards total.")
-    # if len(set(cards)) != len(cards):
-    #     raise ScoreHandsError(
-    #         f"Invalid hand. Duplicate cards exits.")
+    
+    seen_pairs = {}
+    for i in range(0, len(cards) - 1, 2):
+        pair = (cards[i], cards[i + 1])
+        if pair in seen_pairs:
+            raise ScoreHandsError(
+            f"Invalid hand. Duplicate cards exits.")
+        seen_pairs[pair] = True
+    
 
     # Calculate best 5 card hand
     even_odd_pairs = [(i, i+1) for i in range(0, len(cards)-1, 2)]
