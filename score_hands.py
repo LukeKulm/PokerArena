@@ -8,9 +8,8 @@ class ScoreHandsError(Exception):
 
 def hand_rank(hand):
     """
-    Returns tuple with the hand's rank (category) and the tiebreak info.
+    Returns tuple with the hand's rank (category) and the tiebreak info
     """
-
     ranks = sorted(["--23456789TJQKA".index(hand[i]) for i in range(0, len(hand), 2)], reverse=True)
     rank_counts = Counter(ranks).most_common()
     is_flush = len(set(hand[i] for i in range(1, len(hand), 2))) == 1
@@ -62,7 +61,7 @@ def hand_rank(hand):
 
 def best_hand_calc(cards):
     """
-    Takes a list of at least 5 cards and returns the best 5-card hand.
+    Takes a list of at least 5 cards and returns the best 5-card hand
     """
     if len(cards) < 5:
         raise ScoreHandsError(

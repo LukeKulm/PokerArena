@@ -7,7 +7,9 @@ import math
 
 
 class Player(ABC):
-
+    """
+    Abstract class for a player in a poker game
+    """
     # returns a tuple (move, ammount) where move is 0 for a fold, 1 for a check, 2 for a bet
     @abstractmethod
     def act(self, game):
@@ -21,6 +23,11 @@ class Player(ABC):
 
 
 def get_suit(num):
+    """
+    Returns the string representation of a suit given a number
+
+    param num: the number of the suit
+    """
     if num == 0:
         return "Hearts"
     elif num == 1:
@@ -32,6 +39,11 @@ def get_suit(num):
 
 
 def get_rank(num):
+    """
+    Returns the string representation of a rank given a number
+
+    param num: the number of the rank
+    """
     if num < 11:
         return str(num)
     else:
@@ -46,6 +58,11 @@ def get_rank(num):
 
 
 def decode_cards(lis):
+    """
+    Returns a string representation of a list of cards
+
+    param lis: the list of cards
+    """
     ans = ""
     for i in range(0,  len(lis), 2):
         if lis[i] != 0:
@@ -57,6 +74,11 @@ def decode_cards(lis):
 
 
 def decode_stage(num):
+    """
+    Returns the string representation of a stage in a poker hand given a number
+
+    param num: the number of the stage
+    """
     if num == 0:
         return "Preflop"
     elif num == 1:
@@ -68,12 +90,20 @@ def decode_stage(num):
 
 
 class Human(Player):
+    """
+    Class for a human player in a poker game, which acts using command line input
+    """
     def __init__(self, balance):
         self.balance = balance
         self.folded = False
         self.allin = False
 
     def act(self, state):
+        """
+        Returns the move of the human player
+
+        param state: the state of the game
+        """
         n = state[0]
         i = state[1]
         hand = decode_cards(state[2:6])
@@ -84,13 +114,6 @@ class Human(Player):
         board = decode_cards(state[10:20])
         stack = state[20]
         bet = state[21] - state[22]
-
-        # if  i  ==  idealer:
-        #     print("You are the dealer.")
-        # elif i>idealer:
-        #     print("You are in the "+i-idealer+" position.")
-        # else:
-        #     print("You are in the "+n-(idealer-i)+" position.")
 
         print("\nIt is player "+str(i)+"'s turn.")
         print("You have "+str(stack)+" chips in your stack.")
@@ -143,14 +166,21 @@ class Human(Player):
                     self.allin = True
                     return (2, self.balance, 1)
 
-
 class Random(Player):
+    """
+    Class for a randomly-acting agent in a poker game
+    """
     def __init__(self, balance):
         self.balance = balance
         self.folded = False
         self.allin = False
 
     def act(self, state):
+        """
+        Returns the move of the random player
+
+        param state: the state of the game
+        """
         bet = state[21]-state[22]
         if bet == 0:
             move = random.choice(['c', 'r'])  # randomly choose check or raise
@@ -187,6 +217,9 @@ class Random(Player):
 
 
 class MonteCarloAgent(Player):
+    """
+    Class for an agent that uses Monte Carlo simulation on a hand to determine its move
+    """
     def __init__(self, balance, number_of_opps):
         self.balance = balance
         self.folded = False
@@ -195,6 +228,9 @@ class MonteCarloAgent(Player):
         self.number_of_opps = number_of_opps
 
     def act(self, state):
+        """
+        Returns the move of the Monte Carlo agent
+        """
         bet = state[21] - state[22]
         win_rate = simulate_games.expected_win_rate(
             state[2:6], state[10:20], self.number_of_opps)

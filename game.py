@@ -6,11 +6,11 @@ import random
 
 
 class Game:
-    """Represents the overall poker game."""
-
+    """
+    Represents the overall poker game
+    """
     def __init__(self, players, start=200):
         self.num_players = len(players)
-        # self.players = [Player(f"Player {i+1}") for i in range(num_players)] #  wrong
         self.players = []
         for type in players:
             if type == "Human":
@@ -35,23 +35,21 @@ class Game:
         self.bets = [0]*self.num_players
 
     def gen_order(self):
-        """generates the order of play based on dealer position"""  # for example if dealer is 2 and num_players is 4, order is [3, 0, 1, 2]
+        """
+        Generates the order of play based on dealer position
+        For example, if dealer is 2 and num_players is 4, order is [3, 0, 1, 2]
+        """  
         result = []
         start = self.dealer_position + 1
         for i in range(start, start + self.num_players):
             result.append(i % self.num_players)
         return result
 
-    # def pot_good(self, calls):
-    #     for i in range(self.num_players):
-    #         if self.folded[i] or self.current_bet == calls[i] or self.players[i].allin:
-    #             pass
-    #         else:
-    #             return False
-    #     return True
-
-    def pg(self):  # missing allin functionality maybe????
-        # if all players have either folded or bet the same amount, return True
+    def pg(self):
+        """
+        Checks if all players have matched a raise or folded, and returns True 
+        if the hand may advance
+        """
         print("checking if pot is good . . . ")
         for i in range(self.num_players):
             if self.folded[i] or self.bets[i] == self.current_bet or self.players[i].allin:
@@ -63,7 +61,9 @@ class Game:
         return True
 
     def deal_hole_cards(self):
-        """Deals two cards to each player."""
+        """
+        Deals two cards to each player
+        """
         self.folded = [False]*self.num_players
         self.community_cards.wipe()
         self.deck.wipe()
@@ -73,21 +73,28 @@ class Game:
             hand.add_card(*self.deck.deal_card())
 
     def deal_flop(self):
-        """Deals the first three community cards (the flop)."""
+        """
+        Deals the first three community cards (the flop)
+        """
         for _ in range(3):
             self.community_cards.add_card(*self.deck.deal_card())
 
     def deal_turn(self):
-        """Deals the fourth community card (the turn)."""
+        """
+        Deals the fourth community card (the turn)
+        """
         self.community_cards.add_card(*self.deck.deal_card())
 
     def deal_river(self):
-        """Deals the fifth community card (the river)."""
+        """
+        Deals the fifth community card (the river)
+        """
         self.community_cards.add_card(*self.deck.deal_card())
 
     def betting_round(self):
-        """Simulates a betting round where each player can bet, call/check, or fold."""
-
+        """
+        Simulates a betting round where each player can bet, call/check, or fold
+        """
         advance = False
         raiser = None
         self.current_bet = 0
@@ -158,7 +165,9 @@ class Game:
             self.bets[i] = 0
 
     def step(self):
-        """Moves the game forward one step through the stages."""
+        """
+        Moves the game forward through the stages of a single poker hand
+        """
         # Pre-flop: deal hole cards and start betting
         self.over = False
         self.pot = 0
@@ -194,7 +203,12 @@ class Game:
         self.determine_winner(True)
 
     def determine_winner(self, showdown):
-        """Determines the winner based on the best hand."""
+        """
+        Determines the winner based on the best hand
+
+        param showdown: bool, True if showdown logic should be used (i.e., all
+        five community cards have been dealt)
+        """
         self.over = True
         if not showdown:
             winning_player_idx = None
@@ -205,7 +219,6 @@ class Game:
                 else:
                     winning_player_idx = i
                     winning_player = player
-            # change this to print winning player
             print(
                 f"player {winning_player_idx} wins the pot of {self.pot} chips!")
 
@@ -223,23 +236,27 @@ class Game:
                 if best_hand is None or hand_score > best_hand:
                     best_hand = hand_score
                     winning_player_ix = i
-                    winning_player = player  # this assignemnt doens't work
-            # change this to print winning player
+                    winning_player = player
             print(f"player {i} wins the pot of {self.pot} chips!")
-        # winning_player.win(self.pot)
         if winning_player:
             winning_player.balance += self.pot  # not tested
         self.pot = 0
         self.dealer_position += 1
 
     def win_check(self):
-        # if only one player remains, they win the pot
-        # else, continue to showdown
+        """
+        if only one player remains, they win the pot, otherwise continue to showdown
+        """
         if self.count_num_folded() == self.num_players - 1:
             self.determine_winner(False)
             return True
 
-    def encode(self, player_ind):  # player_ind is an index
+    def encode(self, player_ind):
+        """
+        Encodes the state of the game for a given player in a numpy array
+
+        param player_ind: int, the index of the player in self.players
+        """
         state = np.zeros(23, dtype=int)
         state[0] = self.num_players
         state[1] = player_ind
@@ -317,8 +334,9 @@ class Game:
 
 
 class Deck:
-    """Represents a deck of cards for dealing."""
-
+    """
+    Represents a standard deck of cards for dealing
+    """
     def __init__(self):
         self.deck = []
         for suit in "hdcs":
@@ -342,6 +360,9 @@ class Deck:
 
 
 class Hand:
+    """
+    Represents cards that have been dealt, either to the community or to a player
+    """
     def __init__(self):
         self.nums = []
         self.suits = []

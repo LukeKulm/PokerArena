@@ -17,10 +17,10 @@ TODO for submission today:
 Script:
 
 James will demonstrate the following:
-1.
+1. Demonstrate player vs player playing, including the Preflop and betting round start/end logic, along with the possible actions in simulate.py.
 
 Max will demonstrate the following:
-1. Demonstrate player vs player playing of the poker suite via adding “Human” to the list of game.Game initialization in simulate.py. Run simulate.py.
+1. Demonstrate player vs player playing, covering the endgame, including the endgame logic, hand scoring, and winning pot distribution in simulate.py.
 
 Luke will demonstrate the following:
 1. Demonstrate running of PyTest tests to demonstrate regression testing (run pytest).
