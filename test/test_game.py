@@ -56,4 +56,28 @@ def test_determine_winner_no_showdown(create_game):
     
     game.determine_winner(showdown=False)
     assert game.players[0].balance == 200 + 100  # Winner gets the pot
+    
+def test_showdown_winner(create_random_game):
+    """Test that the correct player wins during a showdown."""
+    g = create_random_game
+    g.folded = [False, False, False]  # No one folded
+    g.hands[0].add_card('A', 's')
+    g.hands[0].add_card('K', 's')
+    g.hands[1].add_card('2', 'c')
+    g.hands[1].add_card('7', 'h')
+    g.hands[2].add_card('5', 'd')
+    g.hands[2].add_card('9', 'c')
+    g.community_cards.add_card('A', 'h')
+    g.community_cards.add_card('K', 'd')
+    g.community_cards.add_card('5', 's')
+    g.community_cards.add_card('7', 's')
+    g.community_cards.add_card('2', 's')
+
+    g.pot = 300
+    g.determine_winner(showdown=True)
+    
+    # Player 0 should win with two pairs (Aces and Kings)
+    assert g.players[0].balance == 200 + 300  # Player 0 wins the pot
+    
+
         
