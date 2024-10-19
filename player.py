@@ -120,7 +120,7 @@ class Human(Player):
 
         else:
             move = "x"
-            print("It is "+str(bet)+" to call.")
+            print("The total bets requred this round are "+str(state[21])+" and you're already in for "+str(state[22])+" so it is "+str(bet)+" to call.")
             while move not in "fcr":
                 move = input("enter f to fold, c to call, r to raise: ")
             if move == 'f':

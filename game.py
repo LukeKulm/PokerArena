@@ -128,7 +128,7 @@ class Game:
                     self.pot += bet_amount
                     self.bets[i] += bet_amount
                     player.bet(bet_amount)
-                    self.current_bet = bet_amount
+                    self.current_bet = self.bets[i] 
                     raiser = i
                     print(f"player {i} bets {bet_amount}")
                 if action == 0:  # fold

@@ -3,7 +3,7 @@ import game
 
 
 def main():
-    g = game.Game(["Random", "MonteCarlo"], 200)
+    g = game.Game(["Human", "Random"], 200)
     while get_not_busted(g) > 1:
         g.step()
 
