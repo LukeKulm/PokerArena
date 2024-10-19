@@ -82,12 +82,35 @@ class Game:
         advance = False
         raiser = None
         self.current_bet = 0
+        big_in = True
+        small_in = True
+        if self.stage == 0:
+            big_in = False
+            small_in = False
         while advance == False:
-            
+           
             for i in self.order:
-
-                self.win_check()
                 player = self.players[i]
+                if not small_in:
+                    self.pot += 1
+                    self.bets[i] = 1
+                    player.bet(1)
+                    self.current_bet = 1
+                    raiser = i
+                    print(f"Small blind")
+                    small_in = True
+                    continue
+                elif not big_in:
+                    self.pot += 2
+                    self.bets[i] = 2
+                    player.bet(2)
+                    self.current_bet = 2
+                    raiser = i
+                    print(f"Big blind")
+                    big_in = True
+                    continue
+                self.win_check()
+                
                 if self.folded[i] or player.allin or i == raiser:
                     continue
                 state = self.encode(i)
@@ -124,6 +147,7 @@ class Game:
         # Pre-flop: deal hole cards and start betting
         print("Dealing hole cards...")
         self.deal_hole_cards()
+        self.stage = 0
         self.betting_round()
         
         # Flop: deal first three community cards
@@ -164,7 +188,6 @@ class Game:
             best_hand = None
             winning_player = None
             for i in self.order:
-                print(i)
                 player = self.players[i]
                 if self.folded[i]:
                     continue
