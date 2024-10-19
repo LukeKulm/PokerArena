@@ -175,7 +175,8 @@ class Game:
                     winning_player = player # this assignemnt doens't work
             print(f"player  wins the pot of {self.pot} chips!") # change this to print winning player
         # winning_player.win(self.pot)
-        winning_player.balance += self.pot # not tested
+        if winning_player:
+            winning_player.balance += self.pot # not tested
         self.pot = 0
         self.dealer_position += 1
 

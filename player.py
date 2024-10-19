@@ -74,7 +74,8 @@ class Human(Player):
         #     print("You are in the "+i-idealer+" position.")
         # else:
         #     print("You are in the "+n-(idealer-i)+" position.")
-        print("It is player "+str(i)+"'s turn.")
+        
+        print("\nIt is player "+str(i)+"'s turn.")
         print("You have "+str(stack)+" chips in your stack.")
         print("The stage of the hand is "+stage)
         print("The board is "+board[:-2]+".")
