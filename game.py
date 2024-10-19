@@ -6,13 +6,16 @@ import random
 
 class Game:
     """Represents the overall poker game."""
-    def __init__(self, num_players):
-        self.num_players = num_players
+    def __init__(self, players, start):
+        self.num_players = len(players)
         # self.players = [Player(f"Player {i+1}") for i in range(num_players)] #  wrong
         self.players = []
-        for i in range(num_players):
-            self.players.append(player.Human(200))
-        self.hands = [Hand() for _ in range(num_players)]
+        for type in players:
+            if type == "Human":
+                self.players.append(player.Human(start))
+            elif type == "Random":
+                self.players.append(player.Random(start))
+        self.hands = [Hand() for _ in range(self.num_players)]
         self.dealer_position = 0
         self.order = self.gen_order()
         self.community_cards = Hand()
@@ -23,8 +26,8 @@ class Game:
         self.sb = 1
         self.bb = 2
         self.stacksize = self.bb * 100
-        self.folded = [False]*num_players
-        self.bets = [0]*num_players
+        self.folded = [False]*self.num_players
+        self.bets = [0]*self.num_players
 
     def gen_order(self):
         """generates the order of play based on dealer position""" # for example if dealer is 2 and num_players is 4, order is [3, 0, 1, 2]

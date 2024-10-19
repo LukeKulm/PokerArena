@@ -102,6 +102,7 @@ class Human(Player):
             
         else:
             move = "x"
+            print("It is "+str(bet)+" to call.")
             while move not in "fcr":
                 move = input("enter f to fold, c to call, r to raise: ")
             if move == 'f':
