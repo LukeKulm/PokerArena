@@ -106,7 +106,7 @@ class Game:
                     player.bet(1)
                     self.current_bet = 1
                     raiser = i
-                    print(f"Small blind")
+                    print(f"Player {i} pays the Small blind")
                     small_in = True
                     continue
                 elif not big_in:
@@ -115,7 +115,7 @@ class Game:
                     player.bet(2)
                     self.current_bet = 2
                     raiser = i
-                    print(f"Big blind")
+                    print(f"Player {i} pays the Big blind")
                     big_in = True
                     continue
                 self.win_check()
