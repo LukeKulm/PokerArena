@@ -130,10 +130,10 @@ class Game:
                     player.bet(bet_amount)
                     self.current_bet = bet_amount
                     raiser = i
-                    print(f"player bets {bet_amount}")
+                    print(f"player {i} bets {bet_amount}")
                 if action == 0:  # fold
                     self.folded[i] = True
-                    print(f"player folds.")
+                    print(f"player {i} folds.")
                 if action == 1:  # check/call
                     self.pot += bet_amount
                     self.bets[i] += bet_amount
@@ -183,18 +183,22 @@ class Game:
     def determine_winner(self, showdown):
         """Determines the winner based on the best hand."""
         if not showdown:
+            winning_player_idx = None
             for i in self.order:
                 player = self.players[i]
                 if self.folded[i]:
                     continue
                 else:
+                    winning_player_idx = i
                     winning_player = player
             # change this to print winning player
-            print(f"player wins the pot of {self.pot} chips!")
+            print(
+                f"player {winning_player_idx} wins the pot of {self.pot} chips!")
 
         elif showdown:
             best_hand = None
             winning_player = None
+            winning_player_ix = None
             for i in self.order:
                 player = self.players[i]
                 if self.folded[i]:
@@ -204,9 +208,10 @@ class Game:
                 best_hand_for_player, hand_score = best_hand_calc(full_hand)
                 if best_hand is None or hand_score > best_hand:
                     best_hand = hand_score
+                    winning_player_ix = i
                     winning_player = player  # this assignemnt doens't work
             # change this to print winning player
-            print(f"player  wins the pot of {self.pot} chips!")
+            print(f"player {i} wins the pot of {self.pot} chips!")
         # winning_player.win(self.pot)
         if winning_player:
             winning_player.balance += self.pot  # not tested
@@ -237,7 +242,7 @@ class Game:
                 state[i] = 0
         elif self.stage == 1:
             for i in range(10, 16, 2):
-                print(self.community_cards)
+                print(self.community_cards.get_cards())
                 state[i] = self.rank_to_num(
                     self.community_cards.get_cards()[i-10])
                 state[i +

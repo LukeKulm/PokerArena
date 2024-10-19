@@ -57,7 +57,6 @@ def expected_win_rate(player_hand_cards, current_board, number_of_opps):
             _, opp_score_metric = score_hands.best_hand_calc(
                 convert_to_str_lst(opp_player_all_cards))
             if opp_score_metric > score_metric:
-                print(opp_player_all_cards)
                 this_player_won = False
                 break
 
