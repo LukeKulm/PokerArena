@@ -65,6 +65,8 @@ class Game:
     def deal_hole_cards(self):
         """Deals two cards to each player."""
         self.folded = [False]*self.num_players
+        self.community_cards.wipe()
+        self.deck.wipe()
         for hand in self.hands:
             hand.add_card(*self.deck.deal_card())
             hand.add_card(*self.deck.deal_card())
@@ -309,7 +311,11 @@ class Deck:
         for suit in "hdcs":
             for num in "23456789TJQKA":
                 self.deck.append((num, suit))
-
+    def wipe(self):
+        self.deck = []
+        for suit in "hdcs":
+            for num in "23456789TJQKA":
+                self.deck.append((num, suit))
     def deal_card(self):
         i = random.randint(0, len(self.deck)-1)
         # print("there are "+str(len(self.deck))+" cards in the deck and we chose the "+str(i)+" one.")
@@ -330,7 +336,9 @@ class Hand:
     def add_card(self, num, suit):
         self.nums.append(num)
         self.suits.append(suit)
-
+    def wipe(self):
+        self.nums = []
+        self.suits = []
     def get_cards(self):
         cards = []
         for card in list(zip(self.nums, self.suits)):
