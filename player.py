@@ -161,3 +161,15 @@ class Random(Player):
                 else:
                     self.allin = True
                     return  (2, self.balance, 1)
+
+
+class MonteCarloAgent(Player):
+    def __init__(self, balance, number_of_opps):
+        self.balance = balance
+        self.folded = False
+        self.allin = False
+
+        self.number_of_opps = number_of_opps
+    def act(self, state):
+        bet = state[21]
+    
