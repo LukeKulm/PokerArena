@@ -156,10 +156,13 @@ class Game:
                 player = self.players[i]
                 if self.folded[i]:
                     continue
+                else:
+                    winning_player = player
             print(f"player wins the pot of {self.pot} chips!") # change this to print winning player
-        best_hand = None
-        winning_player = None
-        if showdown:
+        
+        elif showdown:
+            best_hand = None
+            winning_player = None
             for i in self.order:
                 player = self.players[i]
                 if self.folded[i]:
