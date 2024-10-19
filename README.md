@@ -16,6 +16,9 @@ TODO for submission today:
 
 Script:
 
+Max will demonstrate the following:
+1. Demonstrate player vs player playing of the poker suite via adding “Human” to the list of game.Game initialization in simulate.py. Run simulate.py.
+
 Luke will demonstrate the following:
 1. Demonstrate running of PyTest tests to demonstrate regression testing (run pytest).
 2. Demonstrate the playing of a Random agent against a human via adding “Random” to the list of game.Game initialization in simulate.py. Run simulate.py.
