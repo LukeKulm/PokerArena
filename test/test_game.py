@@ -8,6 +8,20 @@ def test_game_step_random_players():
   for i in range(1000):
     g = game.Game(["Random", "Random", "Random"], 200)
     g.step()
+  
+def test_random_vs_montecarlo_players():
+  """Test that game can run many times with random vs montecarlo players"""
+  montecarlo_wins = 0
+  random_wins = 0
+  for i in range(100):
+    g = game.Game(["Random", "MonteCarlo"], 200)
+    g.step()
+    if g.players[0].balance > g.players[1].balance:
+        montecarlo_wins += 1
+    elif g.players[1].balance > g.players[0].balance:
+        random_wins += 1
+  assert montecarlo_wins > random_wins
+
 
 @pytest.fixture
 def create_game():

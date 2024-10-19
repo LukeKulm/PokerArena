@@ -3,6 +3,7 @@
 import random
 from abc import ABC, abstractmethod
 import simulate_games
+import math
 
 
 class Player(ABC):
@@ -192,11 +193,43 @@ class MonteCarloAgent(Player):
         self.number_of_opps = number_of_opps
 
     def act(self, state):
-        bet = state[21]
+        bet = state[21] - state[22]
         win_rate = simulate_games.expected_win_rate(
             state[2:6], state[10:20], self.number_of_opps)
-        if win_rate > 0.50:
-            self.allin = True
-            return (2, self.balance, 1)
+        if bet == 0:
+            if win_rate > 0.98:
+                self.allin = True
+                return (2, self.balance, 1)
+            elif win_rate < 0.25:
+                return (1, 0, 0)
+            else:
+                bet_amount = math.floor(win_rate*self.balance/2)
+                if bet_amount == 0:
+                    return (1, 0, 0)
+                if bet_amount == self.balance:
+                    self.allin = True
+                    return (2, bet_amount, 1)
+                return (2, bet_amount, 0)
         else:
-            return (0, 0, 0)
+            if win_rate > 0.98:
+                self.allin = True
+                return (2, self.balance, 1)
+            if win_rate < 0.25:
+                return (0, 0, 0)
+            else:
+                if bet > self.balance:
+                    if win_rate > 0.5:
+                        self.allin = True
+                        return (2, self.balance, 1)
+                    else:
+                        return (0, 0, 0)
+                else:
+                    if win_rate < 0.5:
+                        return (1, bet, 0)
+                    else:
+                        bet_amount = math.floor(
+                            bet + (self.balance - bet) * win_rate * 0.5)
+                        if bet_amount <= bet:
+                            return (1, bet, 0)
+                        else:
+                            return (2, bet_amount, 0)
