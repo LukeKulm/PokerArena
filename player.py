@@ -68,7 +68,8 @@ class Human(Player):
         pot = state[9]
         board = decode_cards(state[10:20])
         stack = state[20]
-        bet = state[21]
+        bet = state[21] - state[22]
+        
         # if  i  ==  idealer:
         #     print("You are the dealer.")
         # elif i>idealer:

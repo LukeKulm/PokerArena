@@ -84,6 +84,7 @@ class Game:
         self.current_bet = 0
         big_in = True
         small_in = True
+        self.bets = [0]*self.num_players
         if self.stage == 0:
             big_in = False
             small_in = False
@@ -93,7 +94,7 @@ class Game:
                 player = self.players[i]
                 if not small_in:
                     self.pot += 1
-                    self.bets[i] = 1
+                    self.bets[i] += 1
                     player.bet(1)
                     self.current_bet = 1
                     raiser = i
@@ -102,7 +103,7 @@ class Game:
                     continue
                 elif not big_in:
                     self.pot += 2
-                    self.bets[i] = 2
+                    self.bets[i] += 2
                     player.bet(2)
                     self.current_bet = 2
                     raiser = i
@@ -119,7 +120,7 @@ class Game:
 
                 if action == 2: # raise
                     self.pot += bet_amount
-                    self.bets[i] = bet_amount
+                    self.bets[i] += bet_amount
                     player.bet(bet_amount)
                     self.current_bet = bet_amount
                     raiser = i
@@ -129,7 +130,7 @@ class Game:
                     print(f"player folds.")
                 if action == 1: # check/call
                     self.pot += bet_amount
-                    self.bets[i] = bet_amount
+                    self.bets[i] += bet_amount
                     player.bet(bet_amount)
                     if bet_amount == 0:
                         print(f"player checks")
@@ -210,7 +211,7 @@ class Game:
             self.determine_winner(False)
 
     def encode(self, player_ind): # player_ind is an index
-        state = np.zeros(22, dtype=int)
+        state = np.zeros(23, dtype=int)
         state[0] = self.num_players
         state[1] = player_ind
         cards = self.hands[player_ind].get_cards()
@@ -245,6 +246,7 @@ class Game:
                 state[i+1] = self.suit_to_num(self.community_cards.get_cards()[i-9])
         state[20] = self.players[player_ind].balance
         state[21] = self.current_bet
+        state[22] = self.bets[player_ind]
         return state
 
     def count_num_folded(self):
