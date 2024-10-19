@@ -121,7 +121,8 @@ class Human(Player):
 
         else:
             move = "x"
-            print("The total bets requred this round are "+str(state[21])+" and you're already in for "+str(state[22])+" so it is "+str(bet)+" to call.")
+            print("The total bets requred this round are " +
+                  str(state[21])+" and you're already in for "+str(state[22])+" so it is "+str(bet)+" to call.")
             while move not in "fcr":
                 move = input("enter f to fold, c to call, r to raise: ")
             if move == 'f':
@@ -206,21 +207,21 @@ class MonteCarloAgent(Player):
                 bet_amount = math.floor(win_rate*self.balance/2)
                 if bet_amount == 0:
                     return (1, 0, 0)
-                if bet_amount == self.balance:
-                    self.allin = True
-                    return (2, bet_amount, 1)
                 return (2, bet_amount, 0)
         else:
             if win_rate > 0.98:
                 self.allin = True
-                return (2, self.balance, 1)
+                if bet >= self.balance:
+                    return (1, self.balance, 1)
+                else:
+                    return (2, self.balance, 1)
             if win_rate < 0.25:
                 return (0, 0, 0)
             else:
-                if bet > self.balance:
+                if bet >= self.balance:
                     if win_rate > 0.5:
                         self.allin = True
-                        return (2, self.balance, 1)
+                        return (1, self.balance, 1)
                     else:
                         return (0, 0, 0)
                 else:
@@ -233,3 +234,4 @@ class MonteCarloAgent(Player):
                             return (1, bet, 0)
                         else:
                             return (2, bet_amount, 0)
+        return (0, 0, 0)
