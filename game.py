@@ -81,7 +81,7 @@ class Game:
 
         advance = False
         raiser = None
-
+        self.current_bet = 0
         while advance == False:
             
             for i in self.order:
@@ -164,6 +164,7 @@ class Game:
             best_hand = None
             winning_player = None
             for i in self.order:
+                print(i)
                 player = self.players[i]
                 if self.folded[i]:
                     continue
