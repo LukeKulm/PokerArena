@@ -117,10 +117,9 @@ class Game:
             big_in = False
             small_in = False
         self.order = self.gen_order()
-        self.dealer_position+=1
+        
         while advance == False and not self.allin:
             for i in self.order:
-                
                 player = self.players[i]
                 if not small_in:
                     self.pot += 1
@@ -230,6 +229,7 @@ class Game:
             self.betting_round()
 
         self.determine_winner(True)
+        self.dealer_position+=1
 
     def determine_winner(self, showdown):
         """
