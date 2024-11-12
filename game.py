@@ -10,6 +10,7 @@ class Game:
     Represents the overall poker game
     """
     def __init__(self, players, start=200):
+        self.allin = False
         self.user_ended = False
         self.num_players = len(players)
         self.players = []
@@ -46,6 +47,7 @@ class Game:
         start = self.dealer_position + 1
         for i in range(start, start + self.num_players):
             result.append(i % self.num_players)
+        print(f"The order is: {result}")
         return result
 
     def pg(self):
@@ -94,6 +96,14 @@ class Game:
         """
         self.community_cards.add_card(*self.deck.deal_card())
 
+    def get_num_bettors(self):
+        ans = 0
+        for player in self.players:
+            if player.balance>0 and not player.folded:
+                ans+=1
+        return ans
+
+
     def betting_round(self):
         """
         Simulates a betting round where each player can bet, call/check, or fold
@@ -107,9 +117,11 @@ class Game:
         if self.stage == 0:
             big_in = False
             small_in = False
-        while advance == False:
-
+        self.order = self.gen_order()
+        self.dealer_position+=1
+        while advance == False and not self.allin:
             for i in self.order:
+                
                 player = self.players[i]
                 if not small_in:
                     self.pot += 1
@@ -165,6 +177,9 @@ class Game:
             if not advance:
                 advance = self.pg()
         self.reset_bets()
+        if self.get_num_bettors()<2:
+            self.allin = True
+                   
         
 
     def reset_bets(self):
@@ -176,6 +191,11 @@ class Game:
         Moves the game forward through the stages of a single poker hand
         """
         # Pre-flop: deal hole cards and start betting
+
+        for player in self.players:
+            player.in_hand_for = 0
+            player.allin = False
+        self.allin = False
         self.over = False
         self.pot = 0
         print("Dealing hole cards...")
@@ -189,7 +209,8 @@ class Game:
         self.stage = 1
         self.deal_flop()
         print(f"Community cards: {self.community_cards.get_cards()}")
-        self.betting_round()
+        if not self.allin:
+            self.betting_round()
         if self.over or self.user_ended:
             return
         # Turn: deal fourth community card
@@ -197,7 +218,8 @@ class Game:
         self.stage = 2
         self.deal_turn()
         print(f"Community cards: {self.community_cards.get_cards()}")
-        self.betting_round()
+        if not self.allin:
+            self.betting_round()
         if self.over or self.user_ended:
             return
         # River: deal fifth community card
@@ -205,7 +227,8 @@ class Game:
         self.stage = 3
         self.deal_river()
         print(f"Community cards: {self.community_cards.get_cards()}")
-        self.betting_round()
+        if not self.allin:
+            self.betting_round()
 
         self.determine_winner(True)
 
@@ -228,27 +251,45 @@ class Game:
                     winning_player = player
             print(
                 f"player {winning_player_idx} wins the pot of {self.pot} chips!")
-
+            winning_player.win(self.pot)
+            self.pot = 0
         elif showdown:
-            best_hand = None
-            winning_player = None
-            winning_player_ix = None
-            for i in self.order:
-                player = self.players[i]
-                if self.folded[i]:
-                    continue
-                full_hand = self.hands[i].get_cards(
-                ) + self.community_cards.get_cards()
-                best_hand_for_player, hand_score = best_hand_calc(full_hand)
-                if best_hand is None or hand_score > best_hand:
-                    best_hand = hand_score
-                    winning_player_ix = i
-                    winning_player = player
-            print(f"player {i} wins the pot of {self.pot} chips!")
-        if winning_player:
-            winning_player.balance += self.pot  # not tested
-        self.pot = 0
-        self.dealer_position += 1
+            
+            while self.pot>0:
+                best_hand = None
+                winning_player = None
+                winning_player_idx = None
+                for i in self.order:                   
+                    player = self.players[i]
+                    print(f"player {i} is in for {player.in_hand_for} chips!")
+                    if self.folded[i]:
+                        continue
+                    full_hand = self.hands[i].get_cards(
+                    ) + self.community_cards.get_cards()
+                    best_hand_for_player, hand_score = best_hand_calc(full_hand)
+                    if  player.in_hand_for > 0 and (best_hand is None or hand_score > best_hand):
+                        best_hand = hand_score
+                        winning_player_idx = i
+                        winning_player = player
+                
+                if winning_player:
+                    if winning_player.balance != 0: # simpler case, when there are no side pots
+                        print(f"player {winning_player_idx} wins a pot of {self.pot} chips!")
+                        winning_player.balance += self.pot
+                        self.pot = 0
+                    else: # case where there are side pots              
+                        side = 0
+                        max_win = winning_player.in_hand_for
+                        for player in self.players:
+                            won_from_player = min(max_win, player.in_hand_for)
+                            side += won_from_player
+                            self.pot-= won_from_player
+                            player.in_hand_for -= won_from_player
+                        winning_player.balance+=side
+                        print(f"player {winning_player_idx} wins a pot of {side}!")
+                        
+
+
 
     def win_check(self):
         """

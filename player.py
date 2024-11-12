@@ -17,6 +17,7 @@ class Player(ABC):
 
     def bet(self, ammount):
         self.balance -= ammount
+        self.in_hand_for += ammount
 
     def win(self, amm):
         self.balance += amm
@@ -94,6 +95,7 @@ class Human(Player):
     Class for a human player in a poker game, which acts using command line input
     """
     def __init__(self, balance):
+        self.in_hand_for = 0
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -175,6 +177,7 @@ class DataAggregator(Player):
     Class for a human player that remembers actions
     """
     def __init__(self, balance):
+        self.in_hand_for = 0
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -197,6 +200,7 @@ class Random(Player):
     Class for a randomly-acting agent in a poker game
     """
     def __init__(self, balance):
+        self.in_hand_for = 0
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -249,6 +253,7 @@ class MonteCarloAgent(Player):
     Class for an agent that uses Monte Carlo simulation on a hand to determine its move
     """
     def __init__(self, balance, number_of_opps):
+        self.in_hand_for = 0
         self.balance = balance
         self.folded = False
         self.allin = False

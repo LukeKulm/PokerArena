@@ -19,6 +19,8 @@ def aggregate():
     g = game.Game(["DataAggregator", "DataAggregator"], 200)
     while get_not_busted(g) > 1 and not g.user_ended:
         g.step()
+    print("The final stacks are: "+str(g.players[0].balance)+" "+str(g.players[1].balance))
+    print("There was "+ str(g.pot)+" in the pot.")
     x1 = g.players[0].x
     y1 = g.players[0].y
     x2 = g.players[1].x
