@@ -47,7 +47,6 @@ class Game:
         start = self.dealer_position + 1
         for i in range(start, start + self.num_players):
             result.append(i % self.num_players)
-        print(f"The order is: {result}")
         return result
 
     def pg(self):
@@ -261,7 +260,6 @@ class Game:
                 winning_player_idx = None
                 for i in self.order:                   
                     player = self.players[i]
-                    print(f"player {i} is in for {player.in_hand_for} chips!")
                     if self.folded[i]:
                         continue
                     full_hand = self.hands[i].get_cards(
