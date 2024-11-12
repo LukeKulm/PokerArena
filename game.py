@@ -10,11 +10,14 @@ class Game:
     Represents the overall poker game
     """
     def __init__(self, players, start=200):
+        self.user_ended = False
         self.num_players = len(players)
         self.players = []
         for type in players:
             if type == "Human":
                 self.players.append(player.Human(start))
+            elif type == "DataAggregator":
+                self.players.append(player.DataAggregator(start))
             elif type == "Random":
                 self.players.append(player.Random(start))
             elif type == "MonteCarlo":
@@ -133,7 +136,10 @@ class Game:
                 state = self.encode(i)
 
                 action, bet_amount,  allin = player.act(state)
-
+                if action == 4: # end the game
+                    print("Game over!")
+                    self.user_ended = True
+                    return
                 if action == 2:  # raise
                     self.pot += bet_amount
                     self.bets[i] += bet_amount
@@ -159,6 +165,7 @@ class Game:
             if not advance:
                 advance = self.pg()
         self.reset_bets()
+        
 
     def reset_bets(self):
         for i in range(self.num_players):
@@ -175,7 +182,7 @@ class Game:
         self.deal_hole_cards()
         self.stage = 0
         self.betting_round()
-        if self.over:
+        if self.over or self.user_ended:
             return
         # Flop: deal first three community cards
         print("Dealing the flop...")
@@ -183,7 +190,7 @@ class Game:
         self.deal_flop()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
-        if self.over:
+        if self.over or self.user_ended:
             return
         # Turn: deal fourth community card
         print("Dealing the turn...")
@@ -191,7 +198,7 @@ class Game:
         self.deal_turn()
         print(f"Community cards: {self.community_cards.get_cards()}")
         self.betting_round()
-        if self.over:
+        if self.over or self.user_ended:
             return
         # River: deal fifth community card
         print("Dealing the river...")

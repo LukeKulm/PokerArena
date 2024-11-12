@@ -125,12 +125,14 @@ class Human(Player):
 
         if bet == 0:
             move = "x"
-            while move not in "fcr":
-                move = input("enter f to fold, c to check, r to raise: ")
+            while move not in "fcre":
+                move = input("enter f to fold, c to check, r to raise, or e to end the game now: ")
             if move == 'f':
                 return (0, 0,  0)
             elif move == 'c':
                 return (1, 0, 0)
+            elif move  == 'e':
+                return (4, 0, 0)
             else:
                 amm = 0
                 while int(amm) <= 0 or int(amm) > self.balance:
@@ -146,8 +148,8 @@ class Human(Player):
             move = "x"
             print("The total bets requred this round are " +
                   str(state[21])+" and you're already in for "+str(state[22])+" so it is "+str(bet)+" to call.")
-            while move not in "fcr":
-                move = input("enter f to fold, c to call, r to raise: ")
+            while move not in "fcre":
+                move = input("enter f to fold, c to call, r to raise, or e to end the game now: ")
             if move == 'f':
                 return (0, 0,  0)
             elif move == 'c':
@@ -156,6 +158,8 @@ class Human(Player):
                 else:
                     self.allin = True
                     return (1, self.balance, 1)
+            elif move  == 'e':
+                return (4, 0, 0)
             else:
                 amm = 0
                 while int(amm) <= 0 or int(amm) > self.balance or int(amm) < 2*bet:
@@ -165,6 +169,28 @@ class Human(Player):
                 else:
                     self.allin = True
                     return (2, self.balance, 1)
+
+class DataAggregator(Player):
+    """
+    Class for a human player that remembers actions
+    """
+    def __init__(self, balance):
+        self.balance = balance
+        self.folded = False
+        self.allin = False
+        self.x = []
+        self.y = []
+
+    def act(self, state):
+        """
+        Returns the move of the human player
+
+        param state: the state of the game
+        """
+        self.x.append(state)
+        move = Human.act(self, state)
+        self.y.append([move[0], move[1], move[2]])
+        return move
 
 class Random(Player):
     """
@@ -181,6 +207,8 @@ class Random(Player):
 
         param state: the state of the game
         """
+        if self.balance==0:
+            return(0, 0, 0)
         bet = state[21]-state[22]
         if bet == 0:
             move = random.choice(['c', 'r'])  # randomly choose check or raise
