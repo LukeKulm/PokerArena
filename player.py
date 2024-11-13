@@ -94,6 +94,7 @@ class Human(Player):
     """
     Class for a human player in a poker game, which acts using command line input
     """
+
     def __init__(self, balance):
         self.in_hand_for = 0
         self.balance = balance
@@ -128,12 +129,13 @@ class Human(Player):
         if bet == 0:
             move = "x"
             while move not in "fcre":
-                move = input("enter f to fold, c to check, r to raise, or e to end the game now: ")
+                move = input(
+                    "enter f to fold, c to check, r to raise, or e to end the game now: ")
             if move == 'f':
                 return (0, 0,  0)
             elif move == 'c':
                 return (1, 0, 0)
-            elif move  == 'e':
+            elif move == 'e':
                 return (4, 0, 0)
             else:
                 amm = 0
@@ -151,7 +153,8 @@ class Human(Player):
             print("The total bets requred this round are " +
                   str(state[21])+" and you're already in for "+str(state[22])+" so it is "+str(bet)+" to call.")
             while move not in "fcre":
-                move = input("enter f to fold, c to call, r to raise, or e to end the game now: ")
+                move = input(
+                    "enter f to fold, c to call, r to raise, or e to end the game now: ")
             if move == 'f':
                 return (0, 0,  0)
             elif move == 'c':
@@ -160,7 +163,7 @@ class Human(Player):
                 else:
                     self.allin = True
                     return (1, self.balance, 1)
-            elif move  == 'e':
+            elif move == 'e':
                 return (4, 0, 0)
             else:
                 amm = 0
@@ -172,10 +175,12 @@ class Human(Player):
                     self.allin = True
                     return (2, self.balance, 1)
 
+
 class DataAggregator(Player):
     """
     Class for a human player that remembers actions
     """
+
     def __init__(self, balance):
         self.in_hand_for = 0
         self.balance = balance
@@ -195,10 +200,12 @@ class DataAggregator(Player):
         self.y.append([move[0], move[1], move[2]])
         return move
 
+
 class Random(Player):
     """
     Class for a randomly-acting agent in a poker game
     """
+
     def __init__(self, balance):
         self.in_hand_for = 0
         self.balance = balance
@@ -211,8 +218,8 @@ class Random(Player):
 
         param state: the state of the game
         """
-        if self.balance==0:
-            return(0, 0, 0)
+        if self.balance == 0:
+            return (0, 0, 0)
         bet = state[21]-state[22]
         if bet == 0:
             move = random.choice(['c', 'r'])  # randomly choose check or raise
@@ -227,7 +234,7 @@ class Random(Player):
                     return (2, self.balance, 1)
 
         else:
-              
+
             # randomly choose one of the three moves
             move = random.choice(['f', 'c', 'r'])
             if move == 'f':
@@ -248,10 +255,25 @@ class Random(Player):
                     return (2, self.balance, 1)
 
 
+class AIBasedAgent(Player):
+    def __init__(self, balance):
+        self.in_hand_for = 0
+        self.balance = balance
+        self.folded = False
+        self.allin = False
+
+    def act(self, state):
+        bet = state[21] - state[22]
+        agent_hand = state[2:6]
+        board = state[10:20]
+        pass
+
+
 class MonteCarloAgent(Player):
     """
     Class for an agent that uses Monte Carlo simulation on a hand to determine its move
     """
+
     def __init__(self, balance, number_of_opps):
         self.in_hand_for = 0
         self.balance = balance
