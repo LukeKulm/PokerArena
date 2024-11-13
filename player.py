@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 import simulate_games
 import math
 
+PLAYER_TYPES = ["Human", "DataAggregator", "Random", "MonteCarlo"]
+
 
 class Player(ABC):
     """
