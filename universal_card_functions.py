@@ -1,4 +1,4 @@
-def rank_to_num(self, rank):
+def rank_to_num(rank):
     if rank == "T":
         return 10
     if rank == "J":
@@ -13,7 +13,7 @@ def rank_to_num(self, rank):
         return int(rank)
 
 
-def suit_to_num(self, suit):
+def suit_to_num(suit):
     if suit == "c":
         return 0
     if suit == "d":
@@ -24,7 +24,7 @@ def suit_to_num(self, suit):
         return 3
 
 
-def num_to_rank(self, num):
+def num_to_rank(num):
     if num == 10:
         return "T"
     if num == 11:
@@ -38,7 +38,8 @@ def num_to_rank(self, num):
     else:
         return str(num)
 
-def num_to_suite(self, num):
+
+def num_to_suite(num):
     if num == 0:
         return "c"
     if num == 1:
