@@ -4,6 +4,7 @@ import random
 from abc import ABC, abstractmethod
 import simulate_games
 import math
+from ai_models.q_learning_reinforcement_learning_model import PokerQNetwork, DataBuffer
 
 PLAYER_TYPES = ["Human", "DataAggregator", "Random", "MonteCarlo"]
 
@@ -221,7 +222,8 @@ class Random(Player):
         param state: the state of the game
         """
         if self.balance == 0:
-            return (0, 0, 0)
+            self.allin = True
+            return (1, 0, 1)
         bet = state[21]-state[22]
         if bet == 0:
             move = random.choice(['c', 'r'])  # randomly choose check or raise
@@ -257,17 +259,57 @@ class Random(Player):
                     return (2, self.balance, 1)
 
 
-class AIBasedAgent(Player):
-    def __init__(self, balance):
-        self.in_hand_for = 0
+class QLearningAgent(Player):
+    def __init__(self, balance, train=True, epsilon=0.1, save_location="rl_model"):
         self.balance = balance
         self.folded = False
         self.allin = False
+        # 13 actions total
+        # action 0 is fold
+        # action 1 is call
+        # action 2 is raise by minimum amount
+        # action 3 is raise by minimum amount + 10% of remaining_stack
+        # action 4 is raise by minimum amount + 20% of remaining_stack
+        # action 5 is raise by minimum amount + 30% of remaining_stack
+        # action 6 is raise by minimum amount + 40% of remaining_stack
+        # action 7 is raise by minimum amount + 50% of remaining_stack
+        # action 8 is raise by minimum amount + 60% of remaining_stack
+        # action 9 is raise by minimum amount + 70% of remaining_stack
+        # action 10 is raise by minimum amount + 80% of remaining_stack
+        # action 11 is raise by minimum amount + 90% of remaining_stack
+        # action 12 is raise by minimum amount + 100% of remaining_stack
+        self.q_network = PokerQNetwork(
+            state_space_size=22, action_state_size=13)
+        self.buffer = DataBuffer()
+        self.prev_state = None
+        self.prev_action = None
+        self.prev_balance = None
+        # for epsilon greedy
+        self.epsilon = epsilon
 
     def act(self, state):
+        if self.prev_state is not None:
+            self.buffer.add(
+                self.prev_state, self.prev_action, self.balance - self.prev_balance, state, False)
+
+        action = self.q_network.get_action(state, self.epsilon)
+
+        self.prev_state = state
+        self.prev_action = action
+        self.prev_balance = self.balance
+
+        # TODO: fix this here
+        # logic here to validate that the action is valid
+        # if not valid update the prev_action
         bet = state[21] - state[22]
-        agent_hand = state[2:6]
-        board = state[10:20]
+        if action == 0:
+            # fold
+            return (0, 0, 0)
+        elif action == 1:
+            pass
+
+    def train(self):
+        # TODO: implement this to be called from action function every so often
         pass
 
 
