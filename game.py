@@ -1,6 +1,7 @@
 # simulates a game of player objects and makes repeated calls to score_hand
 import player
 from score_hands import best_hand_calc
+from universal_card_functions import rank_to_num, suit_to_num, num_to_rank, num_to_suite
 import numpy as np
 import random
 
@@ -9,6 +10,7 @@ class Game:
     """
     Represents the overall poker game
     """
+
     def __init__(self, players, start=200):
         self.allin = False
         self.user_ended = False
@@ -45,7 +47,7 @@ class Game:
         """
         Generates the order of play based on dealer position
         For example, if dealer is 2 and num_players is 4, order is [3, 0, 1, 2]
-        """  
+        """
         result = []
         start = self.dealer_position + 1
         for i in range(start, start + self.num_players):
@@ -101,10 +103,9 @@ class Game:
     def get_num_bettors(self):
         ans = 0
         for player in self.players:
-            if player.balance>0 and not player.folded:
-                ans+=1
+            if player.balance > 0 and not player.folded:
+                ans += 1
         return ans
-
 
     def betting_round(self):
         """
@@ -120,7 +121,7 @@ class Game:
             big_in = False
             small_in = False
         self.order = self.gen_order()
-        
+
         while advance == False and not self.allin:
             for i in self.order:
                 player = self.players[i]
@@ -149,7 +150,7 @@ class Game:
                 state = self.encode(i)
 
                 action, bet_amount,  allin = player.act(state)
-                if action == 4: # end the game
+                if action == 4:  # end the game
                     print("Game over!")
                     self.user_ended = True
                     return
@@ -157,7 +158,7 @@ class Game:
                     self.pot += bet_amount
                     self.bets[i] += bet_amount
                     player.bet(bet_amount)
-                    self.current_bet = self.bets[i] 
+                    self.current_bet = self.bets[i]
                     raiser = i
                     print(f"player {i} bets {bet_amount}")
                 if action == 0:  # fold
@@ -178,10 +179,8 @@ class Game:
             if not advance:
                 advance = self.pg()
         self.reset_bets()
-        if self.get_num_bettors()<2:
+        if self.get_num_bettors() < 2:
             self.allin = True
-                   
-        
 
     def reset_bets(self):
         for i in range(self.num_players):
@@ -232,7 +231,11 @@ class Game:
             self.betting_round()
 
         self.determine_winner(True)
+<<<<<<< HEAD
         
+=======
+        self.dealer_position += 1
+>>>>>>> a7cd79e6d3133bb1ef516ce8fd65b716cff67a9d
 
     def determine_winner(self, showdown):
         """
@@ -256,41 +259,41 @@ class Game:
             winning_player.win(self.pot)
             self.pot = 0
         elif showdown:
-            
-            while self.pot>0:
+
+            while self.pot > 0:
                 best_hand = None
                 winning_player = None
                 winning_player_idx = None
-                for i in self.order:                   
+                for i in self.order:
                     player = self.players[i]
                     if self.folded[i]:
                         continue
                     full_hand = self.hands[i].get_cards(
                     ) + self.community_cards.get_cards()
-                    best_hand_for_player, hand_score = best_hand_calc(full_hand)
-                    if  player.in_hand_for > 0 and (best_hand is None or hand_score > best_hand):
+                    best_hand_for_player, hand_score = best_hand_calc(
+                        full_hand)
+                    if player.in_hand_for > 0 and (best_hand is None or hand_score > best_hand):
                         best_hand = hand_score
                         winning_player_idx = i
                         winning_player = player
-                
+
                 if winning_player:
-                    if winning_player.balance != 0: # simpler case, when there are no side pots
-                        print(f"player {winning_player_idx} wins a pot of {self.pot} chips!")
+                    if winning_player.balance != 0:  # simpler case, when there are no side pots
+                        print(
+                            f"player {winning_player_idx} wins a pot of {self.pot} chips!")
                         winning_player.balance += self.pot
                         self.pot = 0
-                    else: # case where there are side pots              
+                    else:  # case where there are side pots
                         side = 0
                         max_win = winning_player.in_hand_for
                         for player in self.players:
                             won_from_player = min(max_win, player.in_hand_for)
                             side += won_from_player
-                            self.pot-= won_from_player
+                            self.pot -= won_from_player
                             player.in_hand_for -= won_from_player
-                        winning_player.balance+=side
-                        print(f"player {winning_player_idx} wins a pot of {side}!")
-                        
-
-
+                        winning_player.balance += side
+                        print(
+                            f"player {winning_player_idx} wins a pot of {side}!")
 
     def win_check(self):
         """
@@ -310,10 +313,10 @@ class Game:
         state[0] = self.num_players
         state[1] = player_ind
         cards = self.hands[player_ind].get_cards()
-        state[2] = self.rank_to_num(cards[0])  # first card number
-        state[3] = self.suit_to_num(cards[1])  # first card suit
-        state[4] = self.rank_to_num(cards[2])  # second card number
-        state[5] = self.suit_to_num(cards[3])  # second card suit
+        state[2] = rank_to_num(cards[0])  # first card number
+        state[3] = suit_to_num(cards[1])  # first card suit
+        state[4] = rank_to_num(cards[2])  # second card number
+        state[5] = suit_to_num(cards[3])  # second card suit
         state[6] = self.dealer_position
         state[7] = self.stage
         state[8] = self.count_num_folded()
@@ -324,27 +327,27 @@ class Game:
         elif self.stage == 1:
             for i in range(10, 16, 2):
                 print(self.community_cards.get_cards())
-                state[i] = self.rank_to_num(
+                state[i] = rank_to_num(
                     self.community_cards.get_cards()[i-10])
                 state[i +
-                      1] = self.suit_to_num(self.community_cards.get_cards()[i-9])
+                      1] = suit_to_num(self.community_cards.get_cards()[i-9])
 
             for i in range(16, 20):
                 state[i] = 0
         elif self.stage == 2:
             for i in range(10, 18, 2):
-                state[i] = self.rank_to_num(
+                state[i] = rank_to_num(
                     self.community_cards.get_cards()[i-10])
                 state[i +
-                      1] = self.suit_to_num(self.community_cards.get_cards()[i-9])
+                      1] = suit_to_num(self.community_cards.get_cards()[i-9])
             for i in range(18, 20):
                 state[i] = 0
         else:
             for i in range(10, 20, 2):
-                state[i] = self.rank_to_num(
+                state[i] = rank_to_num(
                     self.community_cards.get_cards()[i-10])
                 state[i +
-                      1] = self.suit_to_num(self.community_cards.get_cards()[i-9])
+                      1] = suit_to_num(self.community_cards.get_cards()[i-9])
         state[20] = self.players[player_ind].balance
         state[21] = self.current_bet
         state[22] = self.bets[player_ind]
@@ -357,45 +360,24 @@ class Game:
                 count += 1
         return count
 
-    def rank_to_num(self, rank):
-        if rank == "T":
-            return 10
-        if rank == "J":
-            return 11
-        if rank == "Q":
-            return 12
-        if rank == "K":
-            return 13
-        if rank == "A":
-            return 14
-        else:
-            return int(rank)
-
-    def suit_to_num(self, suit):
-        if suit == "c":
-            return 0
-        if suit == "d":
-            return 1
-        if suit == "h":
-            return 2
-        else:  # spade
-            return 3
-
 
 class Deck:
     """
     Represents a standard deck of cards for dealing
     """
+
     def __init__(self):
         self.deck = []
         for suit in "hdcs":
             for num in "23456789TJQKA":
                 self.deck.append((num, suit))
+
     def wipe(self):
         self.deck = []
         for suit in "hdcs":
             for num in "23456789TJQKA":
                 self.deck.append((num, suit))
+
     def deal_card(self):
         i = random.randint(0, len(self.deck)-1)
         # print("there are "+str(len(self.deck))+" cards in the deck and we chose the "+str(i)+" one.")
@@ -412,6 +394,7 @@ class Hand:
     """
     Represents cards that have been dealt, either to the community or to a player
     """
+
     def __init__(self):
         self.nums = []
         self.suits = []
@@ -419,9 +402,11 @@ class Hand:
     def add_card(self, num, suit):
         self.nums.append(num)
         self.suits.append(suit)
+
     def wipe(self):
         self.nums = []
         self.suits = []
+
     def get_cards(self):
         cards = []
         for card in list(zip(self.nums, self.suits)):
