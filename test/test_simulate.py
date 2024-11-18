@@ -1,4 +1,4 @@
-import simulate
+import simulate as simulate
 import game
 
 

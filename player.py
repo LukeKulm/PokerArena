@@ -4,6 +4,8 @@ import random
 from abc import ABC, abstractmethod
 import simulate_games
 import math
+from bc import NN
+import torch
 
 
 class Player(ABC):
@@ -224,6 +226,7 @@ class Random(Player):
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
+                    self.allin = True
                     return (2, self.balance, 1)
 
         else:
@@ -246,7 +249,85 @@ class Random(Player):
                 else:
                     self.allin = True
                     return (2, self.balance, 1)
+                
+def round_prediction(n):
+    if n<.5:
+        return 0
+    elif n <1.5:
+        return 1
+    else:
+        return 2
+class BCPlayer(Player):
+    def __init__(self, balance, number_of_opps):
+        self.in_hand_for = 0
+        self.balance = balance
+        self.folded = False
+        self.allin = False
+        model = NN()
+        self.model = NN()
+        state_dict = torch.load('bc_checkpoint.pth')
+        self.model.load_state_dict(state_dict)
+        self.model.eval()
+    def act(self, state):
+        n = state[0]
+        i = state[1]
+        hand = decode_cards(state[2:6])
+        idealer = state[6]
+        stage = decode_stage(state[7])
+        in_hand = state[8]
+        pot = state[9]
+        board = decode_cards(state[10:20])
+        stack = state[20]
+        bet = state[21] - state[22]
 
+        state_tensor = torch.from_numpy(state).float()
+        prediction = self.model.forward(state_tensor)
+        move = prediction[0]
+        ammount = prediction[1]
+        jam = prediction[2]
+        print(move)
+        move = round_prediction(move)
+        print(prediction)
+        print(move)
+        if bet == 0:   
+            if move == 0: # model predicts a fold when there is no bet
+                return (1, 0,  0)
+            elif move == 1: # model predicts a check/call
+                return (1, 0, 0)
+            elif move  == 2: # model predicts a raise
+                if ammount >=2: # raise if it's more than a BB
+                    if ammount >= self.balance:
+                        self.allin = True
+                        return (2, self.balance, 1)
+                    else:
+                        return (2, ammount, 0)
+                else: # otherwise check
+                    return (1, 0, 0)
+        else:
+            if move == 0:
+                return (0, 0,  0)
+            elif move == 1: # model predicts a call
+                if bet < self.balance:
+                    return (1, bet, 0)
+                else:
+                    self.allin = True
+                    return (1, self.balance, 1)
+            elif move  == 2:
+                if ammount < abs(bet-ammount): # fold
+                    return (0, 0, 0)
+                elif ammount < bet*2 and (abs(bet-ammount) < abs((bet*2)-ammount)): # call
+                    return (1, ammount, 0)
+                else:
+                    ammount = max(ammount, 2*bet)
+                    if ammount >= self.balance:
+                        self.allin = True
+                        return (2, self.balance, 1)
+                    else:
+                        return (2, ammount, 0) 
+
+
+
+    
 
 class MonteCarloAgent(Player):
     """

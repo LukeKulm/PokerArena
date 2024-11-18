@@ -24,6 +24,9 @@ class Game:
             elif type == "MonteCarlo":
                 self.players.append(
                     player.MonteCarloAgent(start, len(players)-1))
+            elif type == "BCPlayer":
+                self.players.append(
+                    player.BCPlayer(start, len(players)-1))
         self.hands = [Hand() for _ in range(self.num_players)]
         self.dealer_position = 0
         self.order = self.gen_order()
@@ -189,7 +192,7 @@ class Game:
         Moves the game forward through the stages of a single poker hand
         """
         # Pre-flop: deal hole cards and start betting
-
+        
         for player in self.players:
             player.in_hand_for = 0
             player.allin = False
@@ -229,7 +232,7 @@ class Game:
             self.betting_round()
 
         self.determine_winner(True)
-        self.dealer_position+=1
+        
 
     def determine_winner(self, showdown):
         """

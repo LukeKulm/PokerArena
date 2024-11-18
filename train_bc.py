@@ -1,6 +1,18 @@
-import torch
+from bc import NN
+
+if __name__ == "__main__":
+    data, labels = torch.load('data/expert_policy.pt', weights_only = True)
+    data_points = len(data)
+    print(f"Number of data points: {data_points}")
 
 
-data = torch.load('data/expert_policy.pt', weights_only = True)
-data_points = len(data[0])
-print(f"Number of data points: {data_points}")
+    model = NN()
+
+
+    model.train_model(train_data=data, train_targets= labels, num_epochs=1000, learning_rate=0.001)
+
+
+    # Evaluate the model
+    model.evaluate(test_data=data, test_targets=labels)
+
+    model.save_checkpoint()
