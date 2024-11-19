@@ -312,8 +312,9 @@ class Game:
                                 for i in non_folded_players]
 
             for pot_value, players in zip(pots, players_by_pot):
-                winners_and_values = self.determine_side_pot_winners(
-                    pot_value, list(players_in))
+                self.determine_side_pot_winners(pot_value, list(players_in))
+                for player in players:
+                    players_in.remove(player)
 
             new_balances = [(i, self.players[i].balance)
                             for i in non_folded_players]
