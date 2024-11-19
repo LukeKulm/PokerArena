@@ -21,7 +21,7 @@ def main():
     # with open(os.devnull, 'w') as fnull:
     #     with redirect_stdout(fnull):
     while i<50:
-        g = game.Game(["BCPlayer", "Random"], 200)
+        g = game.Game(["Random", "Random"], 200)
         mc_in+=1
         rand_in+=1
         while i<50 and  get_not_busted(g) > 1 and not g.user_ended:
@@ -34,7 +34,7 @@ def main():
             rand_game = g.players[1].balance
         mc_sum+=mc_game
         rand_sum+=rand_game
-    print(f"BC folded {g.players[0].folds} hands")
+    
     print(mc_balance[-1])
     print(random_balance[-1])
     plt.plot(range(len(mc_balance)), mc_balance, color='blue')
