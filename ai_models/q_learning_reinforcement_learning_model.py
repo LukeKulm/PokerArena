@@ -35,7 +35,7 @@ StateActionNextStateInstance = namedtuple(
 
 
 class DataBuffer(object):
-    def __init__(self, maxsize=100000):
+    def __init__(self, maxsize=10000):
         self.buffer = deque(maxlen=maxsize)
 
     def add(self, state, action, reward, next_state, done):

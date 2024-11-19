@@ -191,7 +191,7 @@ class Game:
         Moves the game forward through the stages of a single poker hand
         """
         # Pre-flop: deal hole cards and start betting
-        
+
         for player in self.players:
             player.in_hand_for = 0
             player.allin = False
@@ -231,7 +231,35 @@ class Game:
             self.betting_round()
 
         self.determine_winner(True)
-        
+
+    def determine_side_pot_winners(self, amount, players):
+        best_hand_rank = (-1,)
+        player_and_rank = []
+        for i in players:
+            full_hand = self.hands[i].get_cards(
+            ) + self.community_cards.get_cards()
+            _, hand_rank = best_hand_calc(
+                full_hand)
+            best_hand_rank = max(hand_rank, best_hand_rank)
+            player_and_rank.append((i, hand_rank))
+
+        winners = []
+        for i, hand_rank in player_and_rank:
+            if hand_rank == best_hand_rank:
+                winners.append(i)
+
+        if len(winners) == 1:
+            self.players[winners[0]].balance += amount
+        else:
+            if amount % len(winners) == 0:
+                for i in winners:
+                    self.players[i].balance += amount / len(winners)
+            else:
+                leftover_amount = amount % len(winners)
+                new_amount = amount - leftover_amount
+                self.players[winners[0]].balance += leftover_amount
+                for i in winners:
+                    self.players[i].balance += new_amount / len(winners)
 
     def determine_winner(self, showdown):
         """
@@ -254,42 +282,86 @@ class Game:
                 f"player {winning_player_idx} wins the pot of {self.pot} chips!")
             winning_player.win(self.pot)
             self.pot = 0
-        elif showdown:
+        else:
+            non_folded_players = [i for i in self.order if not self.folded[i]]
+            contribution_player_id_list = [(self.players[i].in_hand_for, i)
+                                           for i in non_folded_players]
+            contributions = {}
+            for contribution, player_id in contribution_player_id_list:
+                if contribution in contributions:
+                    contributions[contribution].append(player_id)
+                else:
+                    contributions[contribution] = [player_id]
 
-            while self.pot > 0:
-                best_hand = None
-                winning_player = None
-                winning_player_idx = None
-                for i in self.order:
-                    player = self.players[i]
-                    if self.folded[i]:
-                        continue
-                    full_hand = self.hands[i].get_cards(
-                    ) + self.community_cards.get_cards()
-                    best_hand_for_player, hand_score = best_hand_calc(
-                        full_hand)
-                    if player.in_hand_for > 0 and (best_hand is None or hand_score > best_hand):
-                        best_hand = hand_score
-                        winning_player_idx = i
-                        winning_player = player
+            sorted_contributions = sorted(contributions.items())
+            pots = []
+            number_of_non_folded_players = len(non_folded_players)
+            number_no_longer_eligible_for_pots = 0
+            last_contribution_amount = 0
+            for contribution_amount, players in sorted_contributions:
+                pots.append((contribution_amount - last_contribution_amount) *
+                            (number_of_non_folded_players - number_no_longer_eligible_for_pots))
+                number_no_longer_eligible_for_pots += len(players)
+                last_contribution_amount = contribution_amount
 
-                if winning_player:
-                    if winning_player.balance != 0:  # simpler case, when there are no side pots
-                        print(
-                            f"player {winning_player_idx} wins a pot of {self.pot} chips!")
-                        winning_player.balance += self.pot
-                        self.pot = 0
-                    else:  # case where there are side pots
-                        side = 0
-                        max_win = winning_player.in_hand_for
-                        for player in self.players:
-                            won_from_player = min(max_win, player.in_hand_for)
-                            side += won_from_player
-                            self.pot -= won_from_player
-                            player.in_hand_for -= won_from_player
-                        winning_player.balance += side
-                        print(
-                            f"player {winning_player_idx} wins a pot of {side}!")
+            players_by_pot = [players for _,
+                              players in sorted_contributions]
+            players_in = set(non_folded_players)
+
+            initial_balances = [(i, self.players[i].balance)
+                                for i in non_folded_players]
+
+            for pot_value, players in zip(pots, players_by_pot):
+                winners_and_values = self.determine_side_pot_winners(
+                    pot_value, list(players_in))
+
+            new_balances = [(i, self.players[i].balance)
+                            for i in non_folded_players]
+            print("_______________HAND_WINNINGS________________")
+            for i in range(len(initial_balances)):
+                if initial_balances[i][1] != new_balances[i][1]:
+                    print(
+                        f"player {initial_balances[i][0]} wins {int(new_balances[i][1] - initial_balances[i][1])} chips!")
+
+            total_balances = 0
+            for player in self.players:
+                total_balances += player.balance
+            print(f"Total balances: {total_balances}")
+            print("_______________NEW_HAND_____________________")
+            # while self.pot > 0:
+            #     best_hand = None
+            #     winning_player = None
+            #     winning_player_idx = None
+            #     for i in self.order:
+            #         player = self.players[i]
+            #         if self.folded[i]:
+            #             continue
+            #         full_hand = self.hands[i].get_cards(
+            #         ) + self.community_cards.get_cards()
+            #         best_hand_for_player, hand_score = best_hand_calc(
+            #             full_hand)
+            #         if player.in_hand_for > 0 and (best_hand is None or hand_score > best_hand):
+            #             best_hand = hand_score
+            #             winning_player_idx = i
+            #             winning_player = player
+
+            #     if winning_player:
+            #         if winning_player.balance != 0:  # simpler case, when there are no side pots
+            #             print(
+            #                 f"player {winning_player_idx} wins a pot of {self.pot} chips!")
+            #             winning_player.balance += self.pot
+            #             self.pot = 0
+            #         else:  # case where there are side pots
+            #             side = 0
+            #             max_win = winning_player.in_hand_for
+            #             for player in self.players:
+            #                 won_from_player = min(max_win, player.in_hand_for)
+            #                 side += won_from_player
+            #                 self.pot -= won_from_player
+            #                 player.in_hand_for -= won_from_player
+            #             winning_player.balance += side
+            #             print(
+            #                 f"player {winning_player_idx} wins a pot of {side}!")
 
     def win_check(self):
         """

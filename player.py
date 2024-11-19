@@ -1,5 +1,7 @@
 # interface for players and some instances including "user entry"
 
+import torch
+from bc import NN
 import random
 from abc import ABC, abstractmethod
 import simulate_games
@@ -15,14 +17,14 @@ class Player(ABC):
     """
     Abstract class for a player in a poker game
     """
-    # returns a tuple (move, ammount) where move is 0 for a fold, 1 for a check, 2 for a bet
+    # returns a tuple (move, amount) where move is 0 for a fold, 1 for a check, 2 for a bet
     @abstractmethod
     def act(self, game):
         pass
 
-    def bet(self, ammount):
-        self.balance -= ammount
-        self.in_hand_for += ammount
+    def bet(self, amount):
+        self.balance -= amount
+        self.in_hand_for += amount
 
     def win(self, amm):
         self.balance += amm
@@ -217,7 +219,7 @@ class Random(Player):
         self.balance = balance
         self.folded = False
         self.allin = False
-        
+
     def act(self, state):
         """
         Returns the move of the random player
@@ -247,7 +249,7 @@ class Random(Player):
             # randomly choose one of the three moves
             move = random.choice(['f', 'c', 'r'])
             if move == 'f':
-                self.folds+=1
+                self.folds += 1
                 return (0, 0,  0)
             elif move == 'c':
                 if bet < self.balance:
@@ -257,7 +259,7 @@ class Random(Player):
                     return (1, self.balance, 1)
             else:
                 # randomly select amount below balance
-                #amm = random.randint(round(bet), self.balance)
+                # amm = random.randint(round(bet), self.balance)
                 amm = (2+np.random.geometric(.5))
                 if amm < self.balance:
                     return (2, amm, 0)
@@ -381,12 +383,6 @@ class MonteCarloAgent(Player):
 
 # interface for players and some instances including "user entry"
 
-import random
-from abc import ABC, abstractmethod
-import simulate_games
-import math
-from bc import NN
-import torch
 
 PLAYER_TYPES = ["Human", "DataAggregator", "Random", "MonteCarlo"]
 
@@ -395,14 +391,14 @@ class Player(ABC):
     """
     Abstract class for a player in a poker game
     """
-    # returns a tuple (move, ammount) where move is 0 for a fold, 1 for a check, 2 for a bet
+    # returns a tuple (move, amount) where move is 0 for a fold, 1 for a check, 2 for a bet
     @abstractmethod
     def act(self, game):
         pass
 
-    def bet(self, ammount):
-        self.balance -= ammount
-        self.in_hand_for += ammount
+    def bet(self, amount):
+        self.balance -= amount
+        self.in_hand_for += amount
 
     def win(self, amm):
         self.balance += amm
@@ -585,14 +581,16 @@ class DataAggregator(Player):
         self.y.append([move[0], move[1], move[2]])
         return move
 
-                
+
 def round_prediction(n):
-    if n<.5:
+    if n < .5:
         return 0
-    elif n <1.5:
+    elif n < 1.5:
         return 1
     else:
         return 2
+
+
 class BCPlayer(Player):
     def __init__(self, balance, number_of_opps):
         self.in_hand_for = 0
@@ -605,6 +603,7 @@ class BCPlayer(Player):
         state_dict = torch.load('bc_checkpoint.pth')
         self.model.load_state_dict(state_dict)
         self.model.eval()
+
     def act(self, state):
         n = state[0]
         i = state[1]
@@ -620,59 +619,56 @@ class BCPlayer(Player):
         state_tensor = torch.from_numpy(state).float()
         prediction = self.model.forward(state_tensor)
         move = prediction[0]
-        ammount = prediction[1].item()
+        amount = prediction[1].item()
         jam = prediction[2]
         print(move)
         move = round_prediction(move)
         # Use for debugging/explainability:
         # print(prediction)
-        # print(ammount)
+        # print(amount)
         # print(move)
-        if bet == 0:   
-            if move == 0: # model predicts a fold when there is no bet
+        if bet == 0:
+            if move == 0:  # model predicts a fold when there is no bet
                 return (1, 0,  0)
-            elif move == 1: # model predicts a check/call
+            elif move == 1:  # model predicts a check/call
                 return (1, 0, 0)
-            elif move  == 2: # model predicts a raise
-                if ammount >=2: # raise if it's more than a BB
-                    if ammount >= self.balance:
+            elif move == 2:  # model predicts a raise
+                if amount >= 2:  # raise if it's more than a BB
+                    if amount >= self.balance:
                         self.allin = True
                         return (2, self.balance, 1)
                     else:
-                        return (2, ammount, 0)
-                else: # otherwise check
+                        return (2, amount, 0)
+                else:  # otherwise check
                     return (1, 0, 0)
         else:
             if move == 0:
-                self.folds+=1
+                self.folds += 1
                 return (0, 0,  0)
-            elif move == 1: # model predicts a call
-                if ammount < abs(bet-ammount): # fold
-                    self.folds+=1
+            elif move == 1:  # model predicts a call
+                if amount < abs(bet-amount):  # fold
+                    self.folds += 1
                     return (0, 0, 0)
-                else: # call
-                    if ammount >= self.balance:
+                else:  # call
+                    if amount >= self.balance:
                         self.allin = True
                         return (1, self.balance, 1)
                     else:
-                        return (1, bet, 0) 
-            elif move  == 2:
-                if ammount < abs(bet-ammount): # fold
-                    self.folds+=1
+                        return (1, bet, 0)
+            elif move == 2:
+                if amount < abs(bet-amount):  # fold
+                    self.folds += 1
                     return (0, 0, 0)
-                elif ammount < bet*2 and (abs(bet-ammount) < abs((bet*2)-ammount)): # call
-                    return (1, ammount, 0)
+                elif amount < bet*2 and (abs(bet-amount) < abs((bet*2)-amount)):  # call
+                    return (1, amount, 0)
                 else:
-                    ammount = max(ammount, 2*bet)
-                    if ammount >= self.balance:
+                    amount = max(amount, 2*bet)
+                    if amount >= self.balance:
                         self.allin = True
                         return (2, self.balance, 1)
                     else:
-                        return (2, ammount, 0) 
+                        return (2, amount, 0)
 
-
-
-    
 
 class AIBasedAgent(Player):
     def __init__(self, balance):
