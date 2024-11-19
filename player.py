@@ -231,7 +231,8 @@ class Random(Player):
                 return (1, 0, 0)
             else:
                 # randomly select amount below balance
-                amm = random.randint(0, self.balance)
+
+                amm = random.randint(0, round(self.balance))
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
@@ -252,7 +253,8 @@ class Random(Player):
                     return (1, self.balance, 1)
             else:
                 # randomly select amount below balance
-                amm = random.randint(0, self.balance)
+
+                amm = random.randint(0, round(self.balance))
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
@@ -269,6 +271,7 @@ def round_prediction(n):
 class BCPlayer(Player):
     def __init__(self, balance, number_of_opps):
         self.in_hand_for = 0
+        self.folds = 0
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -292,12 +295,14 @@ class BCPlayer(Player):
         state_tensor = torch.from_numpy(state).float()
         prediction = self.model.forward(state_tensor)
         move = prediction[0]
-        ammount = prediction[1]
+        ammount = prediction[1].item()
         jam = prediction[2]
         print(move)
         move = round_prediction(move)
-        print(prediction)
-        print(move)
+        # Use for debugging/explainability:
+        # print(prediction)
+        # print(ammount)
+        # print(move)
         if bet == 0:   
             if move == 0: # model predicts a fold when there is no bet
                 return (1, 0,  0)
@@ -314,6 +319,7 @@ class BCPlayer(Player):
                     return (1, 0, 0)
         else:
             if move == 0:
+                self.folds+=1
                 return (0, 0,  0)
             elif move == 1: # model predicts a call
                 if bet < self.balance:
@@ -323,6 +329,7 @@ class BCPlayer(Player):
                     return (1, self.balance, 1)
             elif move  == 2:
                 if ammount < abs(bet-ammount): # fold
+                    self.folds+=1
                     return (0, 0, 0)
                 elif ammount < bet*2 and (abs(bet-ammount) < abs((bet*2)-ammount)): # call
                     return (1, ammount, 0)

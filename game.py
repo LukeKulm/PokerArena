@@ -231,11 +231,7 @@ class Game:
             self.betting_round()
 
         self.determine_winner(True)
-<<<<<<< HEAD
         
-=======
-        self.dealer_position += 1
->>>>>>> a7cd79e6d3133bb1ef516ce8fd65b716cff67a9d
 
     def determine_winner(self, showdown):
         """
