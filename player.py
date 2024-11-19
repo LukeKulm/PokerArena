@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 import simulate_games
 import math
 from ai_models.q_learning_reinforcement_learning_model import PokerQNetwork, DataBuffer
+import numpy as np
+
 
 PLAYER_TYPES = ["Human", "DataAggregator", "Random", "MonteCarlo"]
 
@@ -210,11 +212,12 @@ class Random(Player):
     """
 
     def __init__(self, balance):
+        self.folds = 0
         self.in_hand_for = 0
         self.balance = balance
         self.folded = False
         self.allin = False
-
+        
     def act(self, state):
         """
         Returns the move of the random player
@@ -231,10 +234,12 @@ class Random(Player):
                 return (1, 0, 0)
             else:
                 # randomly select amount below balance
-                amm = random.randint(0, self.balance)
+                """ amm = random.randint(0, self.balance) """
+                amm = (2+np.random.geometric(.5))
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
+                    self.allin = True
                     return (2, self.balance, 1)
 
         else:
@@ -242,6 +247,7 @@ class Random(Player):
             # randomly choose one of the three moves
             move = random.choice(['f', 'c', 'r'])
             if move == 'f':
+                self.folds+=1
                 return (0, 0,  0)
             elif move == 'c':
                 if bet < self.balance:
@@ -251,7 +257,8 @@ class Random(Player):
                     return (1, self.balance, 1)
             else:
                 # randomly select amount below balance
-                amm = random.randint(0, self.balance)
+                #amm = random.randint(round(bet), self.balance)
+                amm = (2+np.random.geometric(.5))
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
@@ -578,62 +585,6 @@ class DataAggregator(Player):
         self.y.append([move[0], move[1], move[2]])
         return move
 
-
-class Random(Player):
-    """
-    Class for a randomly-acting agent in a poker game
-    """
-
-    def __init__(self, balance):
-        self.in_hand_for = 0
-        self.balance = balance
-        self.folded = False
-        self.allin = False
-
-    def act(self, state):
-        """
-        Returns the move of the random player
-
-        param state: the state of the game
-        """
-        if self.balance == 0:
-            return (0, 0, 0)
-        bet = state[21]-state[22]
-        if bet == 0:
-            move = random.choice(['c', 'r'])  # randomly choose check or raise
-            if move == 'c':
-                return (1, 0, 0)
-            else:
-                # randomly select amount below balance
-
-                amm = random.randint(0, round(self.balance))
-                if amm < self.balance:
-                    return (2, amm, 0)
-                else:
-                    self.allin = True
-                    return (2, self.balance, 1)
-
-        else:
-
-            # randomly choose one of the three moves
-            move = random.choice(['f', 'c', 'r'])
-            if move == 'f':
-                return (0, 0,  0)
-            elif move == 'c':
-                if bet < self.balance:
-                    return (1, bet, 0)
-                else:
-                    self.allin = True
-                    return (1, self.balance, 1)
-            else:
-                # randomly select amount below balance
-
-                amm = random.randint(0, round(self.balance))
-                if amm < self.balance:
-                    return (2, amm, 0)
-                else:
-                    self.allin = True
-                    return (2, self.balance, 1)
                 
 def round_prediction(n):
     if n<.5:
@@ -696,11 +647,15 @@ class BCPlayer(Player):
                 self.folds+=1
                 return (0, 0,  0)
             elif move == 1: # model predicts a call
-                if bet < self.balance:
-                    return (1, bet, 0)
-                else:
-                    self.allin = True
-                    return (1, self.balance, 1)
+                if ammount < abs(bet-ammount): # fold
+                    self.folds+=1
+                    return (0, 0, 0)
+                else: # call
+                    if ammount >= self.balance:
+                        self.allin = True
+                        return (1, self.balance, 1)
+                    else:
+                        return (1, bet, 0) 
             elif move  == 2:
                 if ammount < abs(bet-ammount): # fold
                     self.folds+=1

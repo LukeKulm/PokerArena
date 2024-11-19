@@ -1,4 +1,5 @@
 from bc import NN
+import torch
 
 if __name__ == "__main__":
     data, labels = torch.load('data/expert_policy.pt', weights_only = True)
@@ -9,7 +10,7 @@ if __name__ == "__main__":
     model = NN()
 
 
-    model.train_model(train_data=data, train_targets= labels, num_epochs=1000, learning_rate=0.001)
+    model.train_model(train_data=data, train_targets= labels, num_epochs=3000, learning_rate=0.001)
 
 
     # Evaluate the model

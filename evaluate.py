@@ -5,11 +5,13 @@ import os
 from contextlib import redirect_stdout
 import matplotlib.pyplot as plt
 
+
 def main():
     """
     Simulates a game of Texas Hold'em
     """
-    
+    mc_folds = 0
+    rand_folds = 0
     i = 0
     mc_balance = [0]
     random_balance = [0]
@@ -20,11 +22,11 @@ def main():
 
     # with open(os.devnull, 'w') as fnull:
     #     with redirect_stdout(fnull):
-    while i<50:
-        g = game.Game(["Random", "Random"], 200)
+    while i<1000:
+        g = game.Game(["BCPlayer", "Random"], 200)
         mc_in+=1
         rand_in+=1
-        while i<50 and  get_not_busted(g) > 1 and not g.user_ended:
+        while i<1000 and  get_not_busted(g) > 1 and not g.user_ended:
             print(f"We have simulated {i} hands")
             g.step()
             i+=1
@@ -32,9 +34,12 @@ def main():
             random_balance.append(g.players[1].balance-(rand_in*200)+rand_sum)
             mc_game = g.players[0].balance
             rand_game = g.players[1].balance
+        mc_folds+=g.players[0].folds
+        rand_folds+=g.players[1].folds
         mc_sum+=mc_game
         rand_sum+=rand_game
-    
+    print(f"BC folded {mc_folds} of the hands!")
+    print(f"Random folded {rand_folds} of the hands!")
     print(mc_balance[-1])
     print(random_balance[-1])
     plt.plot(range(len(mc_balance)), mc_balance, color='blue')
@@ -56,7 +61,7 @@ def get_not_busted(g):
     """
     num_players_not_busted = 0
     for player in g.players:
-        if player.balance > 0:
+        if player.balance >2:
             num_players_not_busted += 1
     return num_players_not_busted
 

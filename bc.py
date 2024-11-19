@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 class NN(nn.Module):
-    def __init__(self, input_size=23, hidden_size=50, output_size=3):
+    def __init__(self, input_size=23, hidden_size=10, output_size=3):
         super(NN, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.fc2 = nn.Linear(hidden_size, hidden_size)
