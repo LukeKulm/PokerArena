@@ -24,7 +24,7 @@ def swap(arr, i, j, k, m):
 
 def get_perms(state):
     ans = [state]
-    backwards_hand = swap(state, 2, 4, 3, 5)
+    backwards_hand = swap(state, 10, 12, 11, 13)
     
     ans.append(backwards_hand)
 
@@ -40,7 +40,7 @@ def get_perms(state):
             third = (swap(first, 10, 14, 11, 15))
             ans.append(third)
             ans.append(swap(third, 14, 12, 15, 13))
-    if state[7] > 1:
+    if state[7] > 1: # turn or later
         old = ans
         ans = []
         for first in old:
@@ -48,7 +48,7 @@ def get_perms(state):
             ans.append(swap(first, 16, 10, 17, 11))
             ans.append(swap(first, 16, 12, 17, 13))
             ans.append(swap(first, 16, 14, 17, 15))
-    if state[7] > 2:
+    if state[7] > 2: # river
         old = ans
         ans = []
         for first in old:
@@ -56,13 +56,9 @@ def get_perms(state):
             ans.append(swap(first, 18, 10, 19, 11))
             ans.append(swap(first, 18, 12, 19, 13))
             ans.append(swap(first, 18, 14, 19, 15))
-            old = ans
-        ans = []
-        for first in old:
-            ans.append(first)
-            ans.append(swap(first, 16, 10, 17, 11))
-            ans.append(swap(first, 16, 12, 17, 13))
-            ans.append(swap(first, 16, 18, 17, 19))
+            ans.append(swap(first, 18, 16, 19, 17))
+           
+
             
 
 
