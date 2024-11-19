@@ -226,7 +226,9 @@ class Random(Player):
 
         param state: the state of the game
         """
-        if self.balance == 0:
+        if self.balance <= 0:
+            if state[7] == 0:
+                return (0, 0, 0)
             self.allin = True
             return (1, 0, 1)
         bet = state[21]-state[22]
@@ -260,7 +262,9 @@ class Random(Player):
             else:
                 # randomly select amount below balance
                 # amm = random.randint(round(bet), self.balance)
-                amm = (2+np.random.geometric(.5))
+                amm = 2+np.random.geometric(.5)
+                if amm < bet:
+                    amm = bet
                 if amm < self.balance:
                     return (2, amm, 0)
                 else:
