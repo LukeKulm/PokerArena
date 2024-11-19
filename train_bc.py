@@ -2,7 +2,7 @@ from bc import NN
 import torch
 
 if __name__ == "__main__":
-    data, labels = torch.load('data/expert_policy.pt', weights_only = True)
+    data, labels = torch.load('data/expanded_expert_data.pt', weights_only = True)
     data_points = len(data)
     print(f"Number of data points: {data_points}")
 
