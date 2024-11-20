@@ -8,9 +8,9 @@ import simulate_games
 import math
 from ai_models.q_learning_reinforcement_learning_model import PokerQNetwork, DataBuffer
 import numpy as np
+import improve_dataset
 
-
-PLAYER_TYPES = ["Human", "DataAggregator", "Random", "MonteCarlo"]
+PLAYER_TYPES = ["Human", "DataAggregator", "Random", "MonteCarlo", "BCPlayer"]
 
 
 class Player(ABC):
@@ -384,7 +384,7 @@ class MonteCarloAgent(Player):
 # interface for players and some instances including "user entry"
 
 
-PLAYER_TYPES = ["Human", "DataAggregator", "Random", "MonteCarlo"]
+
 
 
 class Player(ABC):
@@ -598,8 +598,7 @@ class BCPlayer(Player):
         self.balance = balance
         self.folded = False
         self.allin = False
-        model = NN()
-        self.model = NN()
+        self.model = NN(input_size=11)
         state_dict = torch.load('bc_checkpoint.pth')
         self.model.load_state_dict(state_dict)
         self.model.eval()
@@ -615,14 +614,26 @@ class BCPlayer(Player):
         board = decode_cards(state[10:20])
         stack = state[20]
         bet = state[21] - state[22]
+        if False:
 
-        state_tensor = torch.from_numpy(state).float()
-        prediction = self.model.forward(state_tensor)
-        move = prediction[0]
-        amount = prediction[1].item()
-        jam = prediction[2]
-        print(move)
-        move = round_prediction(move)
+
+            state_tensor = torch.from_numpy(state).float()
+            prediction = self.model.forward(state_tensor)
+            move = prediction[0]
+            amount = prediction[1].item()
+            jam = prediction[2]
+            print(move)
+            move = round_prediction(move)
+        else:
+            state_tensor  = improve_dataset.make_new_state(state)
+            # state_tensor = torch.from_numpy(improved_state).float()
+            prediction = self.model.forward(state_tensor)
+            move = prediction[0]
+            amount = prediction[1].item()
+            jam = prediction[2]
+            print(move)
+            move = round_prediction(move)
+
         # Use for debugging/explainability:
         # print(prediction)
         # print(amount)
@@ -646,20 +657,20 @@ class BCPlayer(Player):
                 self.folds += 1
                 return (0, 0,  0)
             elif move == 1:  # model predicts a call
-                if amount < abs(bet-amount):  # fold
-                    self.folds += 1
-                    return (0, 0, 0)
-                else:  # call
+                # if amount < abs(bet-amount):  # fold
+                #     self.folds += 1
+                #     return (0, 0, 0)
+                if True:  # call
                     if amount >= self.balance:
                         self.allin = True
                         return (1, self.balance, 1)
                     else:
                         return (1, bet, 0)
             elif move == 2:
-                if amount < abs(bet-amount):  # fold
-                    self.folds += 1
-                    return (0, 0, 0)
-                elif amount < bet*2 and (abs(bet-amount) < abs((bet*2)-amount)):  # call
+                # if amount < abs(bet-amount):  # fold
+                #     self.folds += 1
+                #     return (0, 0, 0)
+                if amount < bet*2 and (abs(bet-amount) < abs((bet*2)-amount)):  # call
                     return (1, amount, 0)
                 else:
                     amount = max(amount, 2*bet)
