@@ -2,10 +2,14 @@ import numpy as np
 
 HAND_DATA_PATH = ".\data\hand_equiv_classes\hands"
 PREFLOP_DATA_PATH = ".\data\hand_equiv_classes\preflop"
-RANK_MAP = {'A': 0b0001000000000000, 
-            'K': 0b0000100000000000, 
-            'Q': 0b0000010000000000, 
-            'J': 0b0000001000000000, 
+RANK_MAP = {'A': 0b0001000000000000,
+            '14':0b0001000000000000, 
+            'K': 0b0000100000000000,
+            '13':0b0000100000000000, 
+            'Q': 0b0000010000000000,
+            '12':0b0000010000000000, 
+            'J': 0b0000001000000000,
+            '11':0b0000001000000000, 
             'T': 0b0000000100000000,
             '10':0b0000000100000000,
             '9': 0b0000000010000000, 
@@ -76,10 +80,14 @@ class Parser():
         return self.data
     
     def get_preflop(self):
+        self.parse_preflop()
         return self.preflop
     
     def rankmap(self, rank):
-        return RANK_MAP[rank]
+        """
+        Map rank to one-hot vector
+        """
+        return RANK_MAP[str(rank)]
     
 if __name__ == "__main__":
     parser = Parser()
