@@ -29,6 +29,9 @@ class Game:
             elif type == "BCPlayer":
                 self.players.append(
                     player.BCPlayer(start, len(players)-1))
+            elif type == "QLearningAgent":
+                self.players.append(
+                    player.QLearningAgent(start))
         self.hands = [Hand() for _ in range(self.num_players)]
         self.dealer_position = 0
         self.order = self.gen_order()
@@ -334,7 +337,7 @@ class Game:
         # total_balances = 0
         # for player in self.players:
         #     total_balances += player.balance
-        # if total_balances != 400:
+        # if total_balances != 600:
         #     print(f"Total balances: {total_balances}")
         #     raise
             # while self.pot > 0:
