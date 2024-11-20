@@ -48,3 +48,7 @@ def num_to_suite(num):
         return "h"
     else:  # spade
         return "s"
+    
+def rank_to_prime(num):
+    mapping = {2:2, 3:3, 4:5, 5:7, 6:11, 7:13, 8:17, 9:19, 10:23, 11:29, 12:31, 13:37, 14:41}
+    return mapping[num]

@@ -6,7 +6,8 @@ RANK_MAP = {'A': 0b0001000000000000,
             'K': 0b0000100000000000, 
             'Q': 0b0000010000000000, 
             'J': 0b0000001000000000, 
-            'T': 0b0000000100000000, 
+            'T': 0b0000000100000000,
+            '10':0b0000000100000000,
             '9': 0b0000000010000000, 
             '8': 0b0000000001000000, 
             '7': 0b0000000000100000,
@@ -48,7 +49,6 @@ class Parser():
                 for i in range(5, 10):
                     self.data[tick, i - 4] = RANK_MAP[cols[i]]
                 # self.data[self.tick, 6] = cols[10] # this needs to be encoded bc will always be a string
-                print(self.data[tick])
                 tick += 1
 
     def parse_preflop(self):
@@ -74,6 +74,9 @@ class Parser():
 
     def table(self):
         return self.data
+    
+    def get_preflop(self):
+        return self.preflop
     
     def rankmap(self, rank):
         return RANK_MAP[rank]
