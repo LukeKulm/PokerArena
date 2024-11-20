@@ -7,6 +7,7 @@ import numpy as np
 
 class PokerQNetwork(nn.Module):
     def __init__(self, state_space_size, action_space_size, hidden_sizes=[32, 64, 32]):
+        super().__init__()
         self.action_space_size = action_space_size
         self.fc1 = nn.Linear(state_space_size, hidden_sizes[0])
         self.fc2 = nn.Linear(hidden_sizes[0], hidden_sizes[1])
@@ -21,8 +22,10 @@ class PokerQNetwork(nn.Module):
         return q_values
 
     def get_action(self, state, epsilon):
+        # takes as input numpy.ndarray
         # epsilon greedy to explore action space
         # might be other functions to try as well such as multiarmed bandit?
+        state = torch.from_numpy(state).float()
         if np.random.rand() < epsilon:
             return np.random.randint(0, self.action_space_size)
         else:

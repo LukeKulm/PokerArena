@@ -29,6 +29,9 @@ class Game:
             elif type == "BCPlayer":
                 self.players.append(
                     player.BCPlayer(start, len(players)-1))
+            elif type == "QLearningAgent":
+                self.players.append(
+                    player.QLearningAgent(start))
         self.hands = [Hand() for _ in range(self.num_players)]
         self.dealer_position = 0
         self.order = self.gen_order()
@@ -268,6 +271,9 @@ class Game:
         param showdown: bool, True if showdown logic should be used (i.e., all
         five community cards have been dealt)
         """
+        if self.over:
+            return
+
         self.over = True
         if not showdown:
             winning_player_idx = None
@@ -278,14 +284,17 @@ class Game:
                 else:
                     winning_player_idx = i
                     winning_player = player
+            print("_______________HAND_WINNINGS________________")
             print(
                 f"player {winning_player_idx} wins the pot of {self.pot} chips!")
             winning_player.win(self.pot)
             self.pot = 0
+            print("_______________NEW_HAND_____________________")
+
         else:
             non_folded_players = [i for i in self.order if not self.folded[i]]
-            contribution_player_id_list = [(self.players[i].in_hand_for, i)
-                                           for i in non_folded_players]
+            contribution_player_id_list = [
+                (self.players[i].in_hand_for, i) for i in range(len(self.players))]
             contributions = {}
             for contribution, player_id in contribution_player_id_list:
                 if contribution in contributions:
@@ -295,7 +304,7 @@ class Game:
 
             sorted_contributions = sorted(contributions.items())
             pots = []
-            number_of_non_folded_players = len(non_folded_players)
+            number_of_non_folded_players = len(self.players)
             number_no_longer_eligible_for_pots = 0
             last_contribution_amount = 0
             for contribution_amount, players in sorted_contributions:
@@ -314,7 +323,7 @@ class Game:
             for pot_value, players in zip(pots, players_by_pot):
                 self.determine_side_pot_winners(pot_value, list(players_in))
                 for player in players:
-                    players_in.remove(player)
+                    players_in.discard(player)
 
             new_balances = [(i, self.players[i].balance)
                             for i in non_folded_players]
@@ -323,12 +332,14 @@ class Game:
                 if initial_balances[i][1] != new_balances[i][1]:
                     print(
                         f"player {initial_balances[i][0]} wins {int(new_balances[i][1] - initial_balances[i][1])} chips!")
-
-            total_balances = 0
-            for player in self.players:
-                total_balances += player.balance
-            print(f"Total balances: {total_balances}")
             print("_______________NEW_HAND_____________________")
+
+        # total_balances = 0
+        # for player in self.players:
+        #     total_balances += player.balance
+        # if total_balances != 600:
+        #     print(f"Total balances: {total_balances}")
+        #     raise
             # while self.pot > 0:
             #     best_hand = None
             #     winning_player = None
