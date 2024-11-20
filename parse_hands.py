@@ -1,6 +1,7 @@
 import numpy as np
 
 HAND_DATA_PATH = ".\data\hand_equiv_classes\hands"
+PREFLOP_DATA_PATH = ".\data\hand_equiv_classes\preflop"
 RANK_MAP = {'A': 0b0001000000000000, 
             'K': 0b0000100000000000, 
             'Q': 0b0000010000000000, 
@@ -22,8 +23,9 @@ class Parser():
     """
 
     def __init__(self):
-        self.data = np.zeros((7462, 7), dtype=int)
-        self.tick = 0
+        self.data = np.zeros((7462, 7), dtype=int) # np array for 5+ card equivalence classes
+        self.preflop = np.zeros((169, 4), dtype=int) # np array for preflop ranges
+        self.tick_data = 0
 
     def encode_rank_onehot(self, rank):
         """
@@ -39,17 +41,43 @@ class Parser():
         Parse the hand data
         """
         with open(HAND_DATA_PATH, 'r') as file:
+            tick = 0
             for line in file:
-                # row = []
                 cols = line.split()
-                self.data[self.tick, 0] = (int(cols[0]))
+                self.data[tick, 0] = (int(cols[0]))
                 for i in range(5, 10):
-                    self.data[self.tick, i - 4] = RANK_MAP[cols[i]]
-                # self.data[self.tick, 6] = cols[10]
-                print(self.data[self.tick])
-                self.tick += 1
-                return self.data
+                    self.data[tick, i - 4] = RANK_MAP[cols[i]]
+                # self.data[self.tick, 6] = cols[10] # this needs to be encoded bc will always be a string
+                print(self.data[tick])
+                tick += 1
 
+    def parse_preflop(self):
+      """
+      Parse the preflop data
+      """
+      with open(PREFLOP_DATA_PATH, 'r') as file:
+          tick = 0
+          for line in file:
+              cols = line.split()
+              hand = cols[0]
+              rank = cols[1]
+              if len(hand) == 2: # pair
+                  self.preflop[tick, 0] = RANK_MAP[hand[0]]
+                  self.preflop[tick, 1] = RANK_MAP[hand[1]]
+              else:
+                  self.preflop[tick, 0] = RANK_MAP[hand[0]]
+                  self.preflop[tick, 1] = RANK_MAP[hand[1]]
+                  self.preflop[tick, 2] = 1 if hand[2] == 's' else 0
+              self.preflop[tick, 3] = int(rank)
+              print(self.preflop[tick])
+              tick += 1
+
+    def table(self):
+        return self.data
+    
+    def rankmap(self, rank):
+        return RANK_MAP[rank]
+    
 if __name__ == "__main__":
     parser = Parser()
-    parser.parse()
+    parser.parse_preflop()
