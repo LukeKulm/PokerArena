@@ -10,7 +10,8 @@ from ai_models.q_learning_reinforcement_learning_model import PokerQNetwork, Dat
 import numpy as np
 
 
-PLAYER_TYPES = ["Human", "DataAggregator", "Random", "MonteCarlo"]
+PLAYER_TYPES = ["Human", "DataAggregator",
+                "Random", "MonteCarlo", "QLearningAgent"]
 
 
 class Player(ABC):
@@ -273,7 +274,7 @@ class Random(Player):
 
 
 class QLearningAgent(Player):
-    def __init__(self, balance, train=True, epsilon=0.1, save_location="rl_model"):
+    def __init__(self, balance, train=True, epsilon=0.1, save_location="qlearning_model"):
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -281,24 +282,45 @@ class QLearningAgent(Player):
         # action 0 is fold
         # action 1 is call
         # action 2 is raise by minimum amount
-        # action 3 is raise by minimum amount + 10% of remaining_stack
-        # action 4 is raise by minimum amount + 20% of remaining_stack
-        # action 5 is raise by minimum amount + 30% of remaining_stack
-        # action 6 is raise by minimum amount + 40% of remaining_stack
-        # action 7 is raise by minimum amount + 50% of remaining_stack
-        # action 8 is raise by minimum amount + 60% of remaining_stack
-        # action 9 is raise by minimum amount + 70% of remaining_stack
-        # action 10 is raise by minimum amount + 80% of remaining_stack
-        # action 11 is raise by minimum amount + 90% of remaining_stack
-        # action 12 is raise by minimum amount + 100% of remaining_stack
+        # action 3 is raise by double minimum amount of remaining_stack
+        # action 4 is raise by double minimum amount + 5% of remaining_stack
+        # action 5 is raise by double minimum amount + 10% of remaining_stack
+        # action 6 is raise by double minimum amount + 15% of remaining_stack
+        # action 7 is raise by double minimum amount + 20% of remaining_stack
+        # action 8 is raise by double minimum amount + 30% of remaining_stack
+        # action 9 is raise by double minimum amount + 40% of remaining_stack
+        # action 10 is raise by double minimum amount + 50% of remaining_stack
+        # action 11 is raise by double minimum amount + 65% of remaining_stack
+        # action 12 is raise by double minimum amount + 80% of remaining_stack
+        # action 13 is all in
         self.q_network = PokerQNetwork(
-            state_space_size=22, action_state_size=13)
+            state_space_size=23, action_space_size=14)
         self.buffer = DataBuffer()
         self.prev_state = None
         self.prev_action = None
         self.prev_balance = None
         # for epsilon greedy
         self.epsilon = epsilon
+        self.action_to_additional_percentage = {
+            3: 0, 4: 0.05, 5: 0.1, 6: 0.15, 7: 0.2, 8: 0.3, 9: 0.4, 10: 0.5, 11: 0.65, 12: 0.8, 13: 1.0}
+
+    def bet_by_double_min_bet_plus_percentage(self, bet, additional_percentage):
+        double_min_bet = 4
+        if bet != 0:
+            double_min_bet = 3 * bet
+
+        if double_min_bet >= self.balance:
+            self.allin = True
+            return (2, self.balance, 1)
+
+        this_round_bet = double_min_bet + \
+            int(np.floor((self.balance - double_min_bet) * additional_percentage))
+
+        if this_round_bet == self.balance:
+            self.allin = True
+            return (2, this_round_bet, 1)
+        else:
+            return (2, this_round_bet, 0)
 
     def act(self, state):
         if self.prev_state is not None:
@@ -311,15 +333,28 @@ class QLearningAgent(Player):
         self.prev_action = action
         self.prev_balance = self.balance
 
-        # TODO: fix this here
-        # logic here to validate that the action is valid
-        # if not valid update the prev_action
         bet = state[21] - state[22]
         if action == 0:
             # fold
             return (0, 0, 0)
-        elif action == 1:
-            pass
+        if bet >= self.balance:
+            # if bet is larger than AI balance, go all in after this point
+            self.allin = True
+            return (1, self.balance, 1)
+        if action == 1:
+            return (1, bet, 0)
+        elif action == 2:
+            min_bet = 2
+            if bet != 0:
+                min_bet = 2*bet
+            if min_bet >= self.balance:
+                self.allin = True
+                return (2, self.balance, 1)
+            else:
+                return (2, min_bet, 0)
+        else:
+            return self.bet_by_double_min_bet_plus_percentage(
+                bet, self.action_to_additional_percentage[action])
 
     def train(self):
         # TODO: implement this to be called from action function every so often
@@ -386,9 +421,6 @@ class MonteCarloAgent(Player):
         return (0, 0, 0)
 
 # interface for players and some instances including "user entry"
-
-
-PLAYER_TYPES = ["Human", "DataAggregator", "Random", "MonteCarlo"]
 
 
 class Player(ABC):
