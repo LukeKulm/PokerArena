@@ -26,7 +26,7 @@ def normal_sim():
         count = counts[p_type]
         for _ in range(count):
             lst.append(p_type)
-
+    print(lst)
     if len(lst) > 10:
         raise SimulateError(
             f"Too many players: {len(lst)}. Max allowed is 10.")
@@ -34,6 +34,7 @@ def normal_sim():
         raise SimulateError(f"Too few players: {len(lst)}. Min allowed is 2.")
 
     g = game.Game(lst, 200)
+
     while get_not_busted(g) > 1 and not g.user_ended:
         g.step()
 
@@ -42,7 +43,7 @@ def aggregate():
     """
     Simulates a game of Texas Hold'em
     """
-    g = game.Game(["DataAggregator", "DataAggregator"], 200)
+    g = game.Game(["DataAggregator", "BCPlayer"], 200)
     while get_not_busted(g) > 1 and not g.user_ended:
         g.step()
     print("The final stacks are: " +

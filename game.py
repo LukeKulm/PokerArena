@@ -194,7 +194,7 @@ class Game:
         Moves the game forward through the stages of a single poker hand
         """
         # Pre-flop: deal hole cards and start betting
-
+        self.dealer_position+=1
         for player in self.players:
             player.in_hand_for = 0
             player.allin = False
