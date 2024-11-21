@@ -6,7 +6,7 @@ import random
 from abc import ABC, abstractmethod
 import simulate_games
 import math
-from ai_models.q_learning_reinforcement_learning_model import PokerQNetwork, DataBuffer
+from ai_models.q_learning_reinforcement_learning_model import PokerQNetwork, DataBuffer, train_q_network
 import numpy as np
 import improve_dataset
 
@@ -274,7 +274,7 @@ class Random(Player):
 
 
 class QLearningAgent(Player):
-    def __init__(self, balance, train=True, epsilon=0.1, save_location="qlearning_model"):
+    def __init__(self, balance, epsilon=0.1, train=False, learn_frequency=100, batch_size=100):
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -295,7 +295,6 @@ class QLearningAgent(Player):
         # action 13 is all in
         self.q_network = PokerQNetwork(
             state_space_size=23, action_space_size=14)
-        self.buffer = DataBuffer()
         self.prev_state = None
         self.prev_action = None
         self.prev_balance = None
@@ -303,6 +302,12 @@ class QLearningAgent(Player):
         self.epsilon = epsilon
         self.action_to_additional_percentage = {
             3: 0, 4: 0.05, 5: 0.1, 6: 0.15, 7: 0.2, 8: 0.3, 9: 0.4, 10: 0.5, 11: 0.65, 12: 0.8, 13: 1.0}
+        # training_information
+        self.buffer = DataBuffer()
+        self.train = train
+        self.learn_frequency = learn_frequency
+        self.batch_size = batch_size
+        self.iteration = 0
 
     def bet_by_double_min_bet_plus_percentage(self, bet, additional_percentage):
         double_min_bet = 4
@@ -323,9 +328,15 @@ class QLearningAgent(Player):
             return (2, this_round_bet, 0)
 
     def act(self, state):
-        if self.prev_state is not None:
+        if self.prev_state is not None and self.train:
             self.buffer.add(
                 self.prev_state, self.prev_action, self.balance - self.prev_balance, state)
+        if self.train:
+            if self.iteration % self.learn_frequency == 0:
+                self.iteration = 0
+                self.train_on_buffer_data()
+            else:
+                self.iteration += 1
 
         action = self.q_network.get_action(state, self.epsilon)
 
@@ -356,9 +367,9 @@ class QLearningAgent(Player):
             return self.bet_by_double_min_bet_plus_percentage(
                 bet, self.action_to_additional_percentage[action])
 
-    def train(self):
+    def train_on_buffer_data(self):
         # TODO: implement this to be called from action function every so often
-        pass
+        train_q_network(self.q_network, self.buffer, batch_size=self.batch_size)
 
 
 class MonteCarloAgent(Player):
@@ -455,8 +466,6 @@ class BCPlayer(Player):
         board = decode_cards(state[10:20])
         stack = state[20]
         bet = state[21] - state[22]
-        
-
 
         state_tensor = torch.from_numpy(state).float()
         prediction = self.model.forward(state_tensor)
@@ -475,22 +484,22 @@ class BCPlayer(Player):
     def move_from_prediction(self, bet, move, amount):
         if bet == 0:
             if move == 0:  # model predicts a fold when there is no bet
-                self.calls+=1
+                self.calls += 1
                 return (1, 0,  0)
             elif move == 1:  # model predicts a check/call
-                self.calls+=1
+                self.calls += 1
                 return (1, 0, 0)
             elif move == 2:  # model predicts a raise
                 if amount >= 2:  # raise if it's more than a BB
                     if amount >= self.balance:
-                        self.raises+=1
+                        self.raises += 1
                         self.allin = True
                         return (2, self.balance, 1)
                     else:
-                        self.raises+=1
+                        self.raises += 1
                         return (2, amount, 0)
                 else:  # otherwise check
-                    self.calls+=1
+                    self.calls += 1
                     return (1, 0, 0)
         else:
             if move == 0:
@@ -503,33 +512,34 @@ class BCPlayer(Player):
                 if True:  # call
                     if amount >= self.balance:
                         self.allin = True
-                        self.calls+=1
+                        self.calls += 1
                         return (1, self.balance, 1)
                     else:
-                        self.calls+=1
+                        self.calls += 1
                         return (1, bet, 0)
             elif move == 2:
                 if amount < abs(bet-amount):  # fold
                     self.folds += 1
                     return (0, 0, 0)
-                if amount < bet*2:# and (abs(bet-amount) < abs((bet*2)-amount)):  # call
-                    self.calls+=1
+                # and (abs(bet-amount) < abs((bet*2)-amount)):  # call
+                if amount < bet*2:
+                    self.calls += 1
                     if bet >= self.balance:
                         self.allin = True
                         return (1, self.balance, 1)
-                    else:  
+                    else:
                         return (1, bet, 0)
-                    
+
                 else:
                     amount = max(amount, 2*bet)
                     if amount >= self.balance:
                         self.allin = True
-                        self.raises+=1
+                        self.raises += 1
                         return (2, self.balance, 1)
                     else:
-                        self.raises+=1
+                        self.raises += 1
                         return (2, amount, 0)
-                    
+
 
 class SmartBCPlayer(BCPlayer):
     def __init__(self, balance, number_of_opps):
@@ -538,9 +548,10 @@ class SmartBCPlayer(BCPlayer):
         state_dict = torch.load('smart_bc_checkpoint.pth')
         self.model.load_state_dict(state_dict)
         self.model.eval()
+
     def act(self, state):
         bet = state[21] - state[22]
-        state_tensor  = improve_dataset.make_new_state(state)
+        state_tensor = improve_dataset.make_new_state(state)
         # state_tensor = torch.from_numpy(improved_state).float()
         prediction = self.model.forward(state_tensor)
         move = prediction[0]
@@ -550,37 +561,35 @@ class SmartBCPlayer(BCPlayer):
         if bet == 0:
             if amount >= 2:  # raise if it's more than a BB
                 if amount >= self.balance:
-                    self.raises+=1
+                    self.raises += 1
                     self.allin = True
                     return (2, self.balance, 1)
                 else:
-                    self.raises+=1
+                    self.raises += 1
                     return (2, amount, 0)
             else:  # otherwise check
-                self.calls+=1
+                self.calls += 1
                 return (1, 0, 0)
         else:
             if amount < abs(bet-amount):  # fold
                 self.folds += 1
                 return (0, 0, 0)
-            if amount < bet*2:# and (abs(bet-amount) < abs((bet*2)-amount)):  # call
-                self.calls+=1
+            if amount < bet*2:  # and (abs(bet-amount) < abs((bet*2)-amount)):  # call
+                self.calls += 1
                 if bet >= self.balance:
                     self.allin = True
                     return (1, self.balance, 1)
-                else:  
+                else:
                     return (1, bet, 0)
             else:
                 amount = max(amount, 2*bet)
                 if amount >= self.balance:
                     self.allin = True
-                    self.raises+=1
+                    self.raises += 1
                     return (2, self.balance, 1)
                 else:
-                    self.raises+=1
+                    self.raises += 1
                     return (2, amount, 0)
-
-        
 
 
 class AIBasedAgent(Player):
