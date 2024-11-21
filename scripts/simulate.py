@@ -43,7 +43,7 @@ def aggregate():
     """
     Simulates a game of Texas Hold'em
     """
-    g = game.Game(["DataAggregator", "BCPlayer"], 200)
+    g = game.Game(["DataAggregator", "DataAggregator"], 200)
     while get_not_busted(g) > 1 and not g.user_ended:
         g.step()
     print("The final stacks are: " +

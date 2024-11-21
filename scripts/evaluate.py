@@ -10,41 +10,37 @@ def main():
     """
     Simulates a game of Texas Hold'em
     """
-    mc_folds = 0
-    rand_folds = 0
+    players = ["Random", "SmartBCPlayer"]
     i = 0
-    mc_balance = [0]
-    random_balance = [0]
-    mc_in = 0
-    rand_in = 0
-    mc_sum = 0
-    rand_sum = 0
+    balances = [[] for _ in players]
+    sums = [0]*len(players)
+    game_balances = [0]*len(players)
+    games = 0
 
-    # with open(os.devnull, 'w') as fnull:
-    #     with redirect_stdout(fnull):
-    while i<1000:
-        g = game.Game(["BCPlayer", "Random"], 200)
-        mc_in+=1
-        rand_in+=1
-        while i<1000 and  get_not_busted(g) > 1 and not g.user_ended:
-            print(f"We have simulated {i} hands")
-            g.step()
-            i+=1
-            mc_balance.append(g.players[0].balance-(mc_in*200)+mc_sum)
-            random_balance.append(g.players[1].balance-(rand_in*200)+rand_sum)
-            mc_game = g.players[0].balance
-            rand_game = g.players[1].balance
-        mc_folds+=g.players[0].folds
-        rand_folds+=g.players[1].folds
-        mc_sum+=mc_game
-        rand_sum+=rand_game
-    print(f"BC folded {mc_folds} of the hands!")
-    print(f"Random folded {rand_folds} of the hands!")
-    print(mc_balance[-1])
-    print(random_balance[-1])
-    plt.plot(range(len(mc_balance)), mc_balance, color='blue')
-    plt.plot(range(len(random_balance)), random_balance, color='red')
-    plt.title('Monte Carlo vs Random')            
+    with open(os.devnull, 'w') as fnull:
+        with redirect_stdout(fnull):
+            
+            n = 1000
+            while i<n:
+                g = game.Game(players, 200)
+                games+=1
+                while i<n and  get_not_busted(g) == len(players) and not g.user_ended:
+                    print(f"We have simulated {i} hands")
+                    g.step()
+                    i+=1
+                    for j in range(len(players)):
+                        balances[j].append(g.players[j].balance-(games*200)+sums[j])
+                        game_balances[j] = g.players[j].balance
+                for j in range(len(players)):
+                    sums[j]+=game_balances[j] 
+                
+    colors = ["blue", "red", "green", "yellow", "black"]
+    for j in range(len(players)):
+        plt.plot(range(len(balances[j])), balances[j], color=colors[j])
+    title = ""
+    for j in range(len(players)):
+        title+=players[j]+" ("+colors[j]+"), "
+    plt.title(f'{title}over {n} hands which took {games} games')            
     plt.xlabel('# of hands')            
     plt.ylabel('Net Gain')            
 
