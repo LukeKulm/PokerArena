@@ -75,7 +75,7 @@ def test_determine_winner_no_showdown(create_game):
     game = create_game
     game.folded = [False, True, True]  # Only player 0 remains
     game.pot = 100
-
+    game.over = False
     game.determine_winner(showdown=False)
     assert game.players[0].balance == 200 + 100  # Winner gets the pot
 
@@ -97,6 +97,7 @@ def test_showdown_winner(create_random_game):
     g.community_cards.add_card('2', 's')
 
     g.pot = 300
+    g.over = False
     g.determine_winner(showdown=True)
 
     # Player 0 should win with two pairs (Aces and Kings)

@@ -12,6 +12,7 @@ class Game:
     """
 
     def __init__(self, players, start=200):
+        self.over = False
         self.allin = False
         self.user_ended = False
         self.num_players = len(players)
@@ -194,7 +195,7 @@ class Game:
         Moves the game forward through the stages of a single poker hand
         """
         # Pre-flop: deal hole cards and start betting
-        self.dealer_position+=1
+        self.dealer_position += 1
         for player in self.players:
             player.in_hand_for = 0
             player.allin = False
