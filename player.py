@@ -325,7 +325,7 @@ class QLearningAgent(Player):
     def act(self, state):
         if self.prev_state is not None:
             self.buffer.add(
-                self.prev_state, self.prev_action, self.balance - self.prev_balance, state, False)
+                self.prev_state, self.prev_action, self.balance - self.prev_balance, state)
 
         action = self.q_network.get_action(state, self.epsilon)
 
