@@ -20,6 +20,15 @@ RANK_MAP = {'A': 0b0001000000000000,
             '4': 0b0000000000000100, 
             '3': 0b0000000000000010, 
             '2': 0b0000000000000001}
+TYPE_MAP = {'SF': 0,
+            '4K': 1,
+            'FH': 2,
+            'F': 0,
+            'S': 3,
+            '3K': 4,
+            '2P': 5,
+            '1P': 6,
+            'HC': 7}
 
 class Parser():
     
@@ -52,7 +61,8 @@ class Parser():
                 self.data[tick, 0] = (int(cols[0]))
                 for i in range(5, 10):
                     self.data[tick, i - 4] = RANK_MAP[cols[i]]
-                # self.data[self.tick, 6] = cols[10] # this needs to be encoded bc will always be a string
+                self.data[tick, 6] = TYPE_MAP[cols[10]] # this needs to be encoded bc will always be a string
+                # print(self.data[tick])
                 tick += 1
 
     def parse_preflop(self):
@@ -73,7 +83,7 @@ class Parser():
                   self.preflop[tick, 1] = RANK_MAP[hand[1]]
                   self.preflop[tick, 2] = 1 if hand[2] == 's' else 0
               self.preflop[tick, 3] = int(rank)
-              print(self.preflop[tick])
+              # print(self.preflop[tick])
               tick += 1
 
     def table(self):
