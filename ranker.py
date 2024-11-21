@@ -17,6 +17,7 @@ class Ranker():
         self.hand_binary = self.encode_hand(hand)
         # self.hand_binary = np.zeros((len(hand),), dtype=int)
         self.flushes = self.flush_table()
+        self.unique = self.unique_ranks()
 
     def rank(self, hand):
         """
@@ -28,11 +29,11 @@ class Ranker():
             return self.preflop_rank()
         elif len(hand) == 5:
             # TODO: call is_flush
+            index = self.bitwise_value(hand[0]) | self.bitwise_value(hand[1]) | self.bitwise_value(hand[2]) | self.bitwise_value(hand[3]) | self.bitwise_value(hand[4])
             if self.is_flush(hand):
-                index = self.bitwise_value(hand[0]) | self.bitwise_value(hand[1]) | self.bitwise_value(hand[2]) | self.bitwise_value(hand[3]) | self.bitwise_value(hand[4])
                 return int(self.flushes[index]) # is this cast legal?
-            else:
-                return -1
+            elif self.is_unique(hand):
+                return int(self.unique[index])
             # TODO: call is_straight
             # TODO: call high_card
             pass
@@ -49,11 +50,10 @@ class Ranker():
     def encode_hand(self, hand):
         """
         Encode hand as binary vector
-        xxxV VVVV VVVV VVVV SSSS RRRR xxPP PPPP 
+        xxxV VVVV VVVV VVVV SSSS xxPP PPPP 
         Where:
-        V = value of card one-hot
+        V = value (rank) of card one-hot
         S = suit of card one-hot
-        R = rank of card (0-12)
         P = prime number associated with card rank
         """
         hand_binary = np.zeros((len(hand),), dtype=int)
@@ -67,9 +67,9 @@ class Ranker():
                 s = 0b0010
             else:
                 s = 0b0001
-            r = hand[i, 0] - 2
+            # r = hand[i, 0] - 2
             p = rank_to_prime(hand[i, 0])
-            hand_binary[i] = (v << 16) | (s << 12) | (r << 8) | p
+            hand_binary[i] = (v << 12) | (s << 8) | p
         return hand_binary
             # print("{:032b}".format(self.hand_binary[i]))
 
@@ -100,6 +100,9 @@ class Ranker():
         return -1
     
     def flush_table(self):
+        """
+        Creates lookup table for all flushes (5-card same-suit hands)
+        """
         flushes = np.zeros((7937, 1), dtype=int)
         for row in self.data:
            if row[6] == 0:
@@ -109,6 +112,18 @@ class Ranker():
         return flushes
         # print(self.data[1598]) # 7 5 4 3 2 flush
         # print(self.flushes[47]) # hand rank of the 7 5 4 3 2 flush, which is 1599 (smallest flush)
+
+    def unique_ranks(self):
+        """
+        Creates lookup table for all straights or high card hands (5-card hands with unique ranks)
+        Different from flushes because possibility of conflicting indices
+        """
+        unique = np.zeros((7937, 1), dtype=int)
+        for row in self.data:
+            if row[6] == 3 or row[6] == 7: # straight or high card
+                index = row[1] | row[2] | row[3] | row[4] | row[5]
+                unique[index] = row[0]
+        return unique
 
     def is_flush(self, combo):
         """
@@ -120,33 +135,40 @@ class Ranker():
             if self.bitwise_suit(card) != self.bitwise_suit(combo[0]):
                 return False
         return True
+    
+    def is_unique(self, combo):
+        """
+        Check if a 5-card combination has unique ranks
+        """
+        if len(combo) != 5:
+            return False
+        return self.bitwise_value(combo[0]) != self.bitwise_value(combo[1]) != self.bitwise_value(combo[2]) != self.bitwise_value(combo[3]) != self.bitwise_value(combo[4])
 
     def bitwise_value(self, card):
         """
         Get the value of a card
         """
-        return card >> 16
+        return card >> 12
     
     def bitwise_suit(self, card):
         """
         Get the suit of a card
         """
-        return card >> 12 & 0b00000000000000001111
+        return card >> 8 & 0b00000000000000001111
     
-    def bitwise_rank(self, card):
-        """
-        Get the rank of a card
-        """
-        return card >> 8 & 0b000000000000000000001111
+    # def bitwise_rank(self, card):
+    #     """
+    #     Get the rank of a card
+    #     """
+    #     return card >> 8 & 0b000000000000000000001111
     
     def bitwise_prime(self, card):
         """
         Get the prime number of a card
         """
-        return card & 0b00000000000000000000000011111111
+        return card & 0b0000000000000000000011111111
 
 if __name__ == "__main__":
-    # hand = np.array([[12, 3], [11, 3], [10, 2], [9, 3], [8, 3], [7, 3], [6, 3]]) # for testing
     hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
     ranker = Ranker(Parser(), hand)
     binary = ranker.encode_hand(hand)
