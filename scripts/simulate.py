@@ -5,6 +5,7 @@ import torch
 import os
 import numpy as np
 from player import PLAYER_TYPES
+from scripts.utils import get_not_busted
 
 
 class SimulateError(Exception):
@@ -35,7 +36,7 @@ def normal_sim():
 
     g = game.Game(lst, 200)
 
-    while get_not_busted(g) > 1 and not g.user_ended:
+    while get_not_busted(g, 0) > 1 and not g.user_ended:
         g.step()
 
 
@@ -44,7 +45,7 @@ def aggregate():
     Simulates a game of Texas Hold'em
     """
     g = game.Game(["DataAggregator", "DataAggregator"], 200)
-    while get_not_busted(g) > 1 and not g.user_ended:
+    while get_not_busted(g, 0) > 1 and not g.user_ended:
         g.step()
     print("The final stacks are: " +
           str(g.players[0].balance)+" "+str(g.players[1].balance))
@@ -63,19 +64,6 @@ def aggregate():
         updated_data = torch.cat((existing_data, new_data), dim=0)
         updated_labels = torch.cat((existing_labels, new_labels), dim=0)
         torch.save((updated_data, updated_labels), 'data/expert_policy.pt')
-
-
-def get_not_busted(g):
-    """
-    Returns the number of players with a nonzero stack
-
-    param g: the Game() object
-    """
-    num_players_not_busted = 0
-    for player in g.players:
-        if player.balance > 0:
-            num_players_not_busted += 1
-    return num_players_not_busted
 
 
 if __name__ == "__main__":
