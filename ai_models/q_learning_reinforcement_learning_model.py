@@ -1,18 +1,40 @@
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from collections import deque, namedtuple
 import random
 import numpy as np
 
+StateActionNextStateInstance = namedtuple(
+    'StateActionNextStateInstance', ('curr_state', 'curr_action', 'reward', 'next_state'))
+
+
+class DataBuffer(object):
+    def __init__(self, maxsize=10000):
+        self.buffer = deque(maxlen=maxsize)
+
+    def add(self, state, action, reward, next_state):
+        self.buffer.append(StateActionNextStateInstance(
+            state, action, reward, next_state))
+
+    def sample(self, batch_len):
+        batch = random.sample(self.buffer, batch_len)
+        states, actions, rewards, next_states = zip(*batch)
+        return (torch.stack(states),
+                torch.stack(actions),
+                torch.stack(rewards),
+                torch.stack(next_states))
+
 
 class PokerQNetwork(nn.Module):
-    def __init__(self, state_space_size, action_space_size, hidden_sizes=[32, 64, 32]):
+    def __init__(self, state_space_size, action_space_size, hidden_sizes=[32, 64, 32], gamma=0.99):
         super().__init__()
         self.action_space_size = action_space_size
         self.fc1 = nn.Linear(state_space_size, hidden_sizes[0])
         self.fc2 = nn.Linear(hidden_sizes[0], hidden_sizes[1])
         self.fc3 = nn.Linear(hidden_sizes[1], hidden_sizes[2])
         self.fc4 = nn.Linear(hidden_sizes[2], action_space_size)
+        self.gamma = gamma
 
     def forward(self, state):
         x = torch.relu(self.fc1(state))
@@ -33,24 +55,18 @@ class PokerQNetwork(nn.Module):
             return int(torch.argmax(q_function_values))
 
 
-StateActionNextStateInstance = namedtuple(
-    'StateActionNextStateInstance', ('curr_state', 'curr_action', 'reward', 'next_state', 'done'))
+def train_q_network(q_network: PokerQNetwork, buffer: DataBuffer, batch_size=100, learning_rate=1e-3):
+    if len(buffer.buffer) >= batch_size:
+        loss_fn = nn.MSELoss()
+        optimizer = optim.Adam(q_network.parameters(), lr=learning_rate)
+        curr_states, curr_actions, rewards, next_states = buffer.sample()
 
+        network_q_functions = q_network.forward(curr_states)
+        network_q_values = network_q_functions[curr_actions]
 
-class DataBuffer(object):
-    def __init__(self, maxsize=10000):
-        self.buffer = deque(maxlen=maxsize)
+        target_q_values = q_network.gamma * \
+            q_network.forward(next_states) + rewards
 
-    def add(self, state, action, reward, next_state, done):
-        # right now done doesn't really have a meaning I think?
-        self.buffer.append(StateActionNextStateInstance(
-            state, action, reward, next_state, done))
-
-    def sample(self, batch_len):
-        batch = random.sample(self.buffer, batch_len)
-        states, actions, rewards, next_states, dones = zip(*batch)
-        return (torch.stack(states),
-                torch.stack(actions),
-                torch.stack(rewards),
-                torch.stack(next_states),
-                torch.stack(dones).float())
+        loss = loss_fn(network_q_values, target_q_values)
+        loss.backward()
+        optimizer.step()
