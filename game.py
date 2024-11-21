@@ -32,6 +32,9 @@ class Game:
             elif type == "QLearningAgent":
                 self.players.append(
                     player.QLearningAgent(start))
+            elif type == "SmartBCPlayer":
+                self.players.append(
+                    player.SmartBCPlayer(start, len(players)-1))
         self.hands = [Hand() for _ in range(self.num_players)]
         self.dealer_position = 0
         self.order = self.gen_order()

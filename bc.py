@@ -16,7 +16,7 @@ class NN(nn.Module):
         x = self.fc3(x)
         return x
 
-    def train_model(self, train_data, train_targets, num_epochs=500, learning_rate=0.001):
+    def train_model(self, train_data, train_targets, num_epochs=5000, learning_rate=0.001):
         criterion = nn.MSELoss()
         optimizer = optim.Adam(self.parameters(), lr=learning_rate)
 
@@ -28,7 +28,7 @@ class NN(nn.Module):
             loss.backward()
             optimizer.step()
 
-            if (epoch + 1) % 10 == 0:
+            if (epoch + 1) % 500 == 0:
                 print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
     
         print("Training complete!")

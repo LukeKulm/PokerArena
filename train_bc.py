@@ -10,10 +10,10 @@ if __name__ == "__main__":
     model = NN(input_size=len(data[0]))
 
 
-    model.train_model(train_data=data, train_targets= labels, num_epochs=3000, learning_rate=0.001)
+    model.train_model(train_data=data, train_targets= labels, num_epochs=15000, learning_rate=0.001)
 
 
     # Evaluate the model
     model.evaluate(test_data=data, test_targets=labels)
 
-    model.save_checkpoint()
+    model.save_checkpoint(file_path="smart_bc_checkpoint.pth")

@@ -11,7 +11,7 @@ import numpy as np
 import improve_dataset
 
 PLAYER_TYPES = ["Human", "DataAggregator",
-                "Random", "MonteCarlo", "BCPlayer", "QLearningAgent"]
+                "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "SmartBCPlayer"]
 
 
 class Player(ABC):
@@ -621,7 +621,7 @@ class DataAggregator(Player):
 def round_prediction(n):
     if n < .5:
         return 0
-    elif n < 1.5:
+    elif n <= 2:
         return 1
     else:
         return 2
@@ -634,10 +634,12 @@ class BCPlayer(Player):
         self.balance = balance
         self.folded = False
         self.allin = False
-        self.model = NN(input_size=11)
+        self.model = NN(input_size=23)
         state_dict = torch.load('bc_checkpoint.pth')
         self.model.load_state_dict(state_dict)
         self.model.eval()
+        self.calls = 0
+        self.raises = 0
 
     def act(self, state):
         n = state[0]
@@ -650,71 +652,132 @@ class BCPlayer(Player):
         board = decode_cards(state[10:20])
         stack = state[20]
         bet = state[21] - state[22]
-        if False:
+        
 
 
-            state_tensor = torch.from_numpy(state).float()
-            prediction = self.model.forward(state_tensor)
-            move = prediction[0]
-            amount = prediction[1].item()
-            jam = prediction[2]
-            print(move)
-            move = round_prediction(move)
-        else:
-            state_tensor  = improve_dataset.make_new_state(state)
-            # state_tensor = torch.from_numpy(improved_state).float()
-            prediction = self.model.forward(state_tensor)
-            move = prediction[0]
-            amount = prediction[1].item()
-            jam = prediction[2]
-            print(move)
-            move = round_prediction(move)
+        state_tensor = torch.from_numpy(state).float()
+        prediction = self.model.forward(state_tensor)
+        move = prediction[0]
+        amount = prediction[1].item()
+        jam = prediction[2]
+        print(move)
+        move = round_prediction(move)
+        return self.move_from_prediction(bet, move, amount)
 
         # Use for debugging/explainability:
         # print(prediction)
         # print(amount)
         # print(move)
+
+    def move_from_prediction(self, bet, move, amount):
         if bet == 0:
             if move == 0:  # model predicts a fold when there is no bet
+                self.calls+=1
                 return (1, 0,  0)
             elif move == 1:  # model predicts a check/call
+                self.calls+=1
                 return (1, 0, 0)
             elif move == 2:  # model predicts a raise
                 if amount >= 2:  # raise if it's more than a BB
                     if amount >= self.balance:
+                        self.raises+=1
                         self.allin = True
                         return (2, self.balance, 1)
                     else:
+                        self.raises+=1
                         return (2, amount, 0)
                 else:  # otherwise check
+                    self.calls+=1
                     return (1, 0, 0)
         else:
             if move == 0:
                 self.folds += 1
                 return (0, 0,  0)
             elif move == 1:  # model predicts a call
-                # if amount < abs(bet-amount):  # fold
-                #     self.folds += 1
-                #     return (0, 0, 0)
+                if amount < abs(bet-amount):  # fold
+                    self.folds += 1
+                    return (0, 0, 0)
                 if True:  # call
                     if amount >= self.balance:
                         self.allin = True
+                        self.calls+=1
                         return (1, self.balance, 1)
                     else:
+                        self.calls+=1
                         return (1, bet, 0)
             elif move == 2:
-                # if amount < abs(bet-amount):  # fold
-                #     self.folds += 1
-                #     return (0, 0, 0)
-                if amount < bet*2 and (abs(bet-amount) < abs((bet*2)-amount)):  # call
-                    return (1, amount, 0)
+                if amount < abs(bet-amount):  # fold
+                    self.folds += 1
+                    return (0, 0, 0)
+                if amount < bet*2:# and (abs(bet-amount) < abs((bet*2)-amount)):  # call
+                    self.calls+=1
+                    if bet >= self.balance:
+                        self.allin = True
+                        return (1, self.balance, 1)
+                    else:  
+                        return (1, bet, 0)
+                    
                 else:
                     amount = max(amount, 2*bet)
                     if amount >= self.balance:
                         self.allin = True
+                        self.raises+=1
                         return (2, self.balance, 1)
                     else:
+                        self.raises+=1
                         return (2, amount, 0)
+                    
+
+class SmartBCPlayer(BCPlayer):
+    def __init__(self, balance, number_of_opps):
+        super().__init__(balance, number_of_opps)
+        self.model = NN(input_size=11)
+        state_dict = torch.load('smart_bc_checkpoint.pth')
+        self.model.load_state_dict(state_dict)
+        self.model.eval()
+    def act(self, state):
+        bet = state[21] - state[22]
+        state_tensor  = improve_dataset.make_new_state(state)
+        # state_tensor = torch.from_numpy(improved_state).float()
+        prediction = self.model.forward(state_tensor)
+        move = prediction[0]
+        amount = prediction[1].item()
+        jam = prediction[2]
+        print(move)
+        if bet == 0:
+            if amount >= 2:  # raise if it's more than a BB
+                if amount >= self.balance:
+                    self.raises+=1
+                    self.allin = True
+                    return (2, self.balance, 1)
+                else:
+                    self.raises+=1
+                    return (2, amount, 0)
+            else:  # otherwise check
+                self.calls+=1
+                return (1, 0, 0)
+        else:
+            if amount < abs(bet-amount):  # fold
+                self.folds += 1
+                return (0, 0, 0)
+            if amount < bet*2:# and (abs(bet-amount) < abs((bet*2)-amount)):  # call
+                self.calls+=1
+                if bet >= self.balance:
+                    self.allin = True
+                    return (1, self.balance, 1)
+                else:  
+                    return (1, bet, 0)
+            else:
+                amount = max(amount, 2*bet)
+                if amount >= self.balance:
+                    self.allin = True
+                    self.raises+=1
+                    return (2, self.balance, 1)
+                else:
+                    self.raises+=1
+                    return (2, amount, 0)
+
+        
 
 
 class AIBasedAgent(Player):
