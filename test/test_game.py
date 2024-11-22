@@ -5,8 +5,9 @@ import player
 
 def test_game_step_random_players():
     """Test that game can run many times with random players"""
-    for i in range(1000):
-        g = game.Game(["Random", "Random", "Random"], 200)
+    for _ in range(1000):
+        g = game.Game(
+            [("Random", None), ("Random", None), ("Random", None)], 200)
         g.step()
 
 
@@ -14,8 +15,8 @@ def test_random_vs_montecarlo_players():
     """Test that game can run many times with random vs montecarlo players"""
     montecarlo_winnings = 0
     random_winnings = 0
-    for i in range(100):
-        g = game.Game(["Random", "MonteCarlo"], 200)
+    for _ in range(100):
+        g = game.Game([("Random", None), ("MonteCarlo", None)], 200)
         g.step()
         if g.players[1].balance > g.players[0].balance:
             montecarlo_winnings += (g.players[1].balance - 200)
@@ -28,14 +29,14 @@ def test_random_vs_montecarlo_players():
 @pytest.fixture
 def create_game():
     """Fixture to create a game with 3 players."""
-    players = ["Human", "Random", "Random"]
+    players = [("Human", None), ("Random", None), ("Random", None)]
     return game.Game(players, start=200)
 
 
 @pytest.fixture
 def create_random_game():
     """Fixture to create a game with 3 random players."""
-    players = ["Random", "Random", "Random"]
+    players = [("Random", None), ("Random", None), ("Random", None)]
     return game.Game(players, start=200)
 
 
@@ -97,6 +98,8 @@ def test_showdown_winner(create_random_game):
     g.community_cards.add_card('2', 's')
 
     g.pot = 300
+    for player in g.players:
+        player.in_hand_for = 100
     g.over = False
     g.determine_winner(showdown=True)
 
