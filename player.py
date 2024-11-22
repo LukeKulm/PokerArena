@@ -294,11 +294,9 @@ class QLearningAgent(Player):
         # action 11 is raise by double minimum amount + 65% of remaining_stack
         # action 12 is raise by double minimum amount + 80% of remaining_stack
         # action 13 is all in
-        if model_path:
-            self.q_network = torch.load(model_path)
-        else:
-            self.q_network = PokerQNetwork(
-                state_space_size=23, action_space_size=14)
+        self.q_network = PokerQNetwork(
+            state_space_size=23, action_space_size=14)
+        self.q_network.load_state_dict(torch.load(model_path))
         self.prev_state = None
         self.prev_action = None
         self.prev_balance = None
