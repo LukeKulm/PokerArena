@@ -1,7 +1,8 @@
 import numpy as np
 import itertools
+import time
 from parse_hands import Parser
-from universal_card_functions import rank_to_prime
+from universal_card_functions import rank_to_prime, primify
 
 class Ranker():
     """
@@ -18,6 +19,7 @@ class Ranker():
         # self.hand_binary = np.zeros((len(hand),), dtype=int)
         self.flushes = self.flush_table()
         self.unique = self.unique_ranks()
+        self.allelse = self.all_else()
 
     def rank(self, hand):
         """
@@ -34,15 +36,13 @@ class Ranker():
                 return int(self.flushes[index]) # is this cast legal?
             elif self.is_unique(hand):
                 return int(self.unique[index])
-            # TODO: call is_straight
-            # TODO: call high_card
-            pass
+            else:
+                return int((np.where(self.allelse == self.primefactor(hand)))[0])
         elif len(hand) > 5 and len(hand) <= 7:
             combos = list(itertools.combinations(hand, 5)) #  every 5-card combination of the 6-or-7-card hand
             backer = []
             for combo in combos:
                 backer.append(self.rank(combo))
-            print(backer)
             return min(backer) # return the highest rank
         elif len(hand) > 7:
             return -1
@@ -71,7 +71,6 @@ class Ranker():
             p = rank_to_prime(hand[i, 0])
             hand_binary[i] = (v << 12) | (s << 8) | p
         return hand_binary
-            # print("{:032b}".format(self.hand_binary[i]))
 
     def preflop_rank(self, hand):
         """
@@ -103,15 +102,12 @@ class Ranker():
         """
         Creates lookup table for all flushes (5-card same-suit hands)
         """
-        flushes = np.zeros((7937, 1), dtype=int)
+        flushes = np.zeros((7937, 1), dtype='int64')
         for row in self.data:
            if row[6] == 0:
-               # print(row)
                index = row[1] | row[2] | row[3] | row[4] | row[5]
                flushes[index] = row[0]
         return flushes
-        # print(self.data[1598]) # 7 5 4 3 2 flush
-        # print(self.flushes[47]) # hand rank of the 7 5 4 3 2 flush, which is 1599 (smallest flush)
 
     def unique_ranks(self):
         """
@@ -124,6 +120,25 @@ class Ranker():
                 index = row[1] | row[2] | row[3] | row[4] | row[5]
                 unique[index] = row[0]
         return unique
+    
+    def all_else(self):
+        """
+        Creates lookup table for all other hands (full house, four of a kind, three of a kind, pairs)
+        """
+        allelse = np.zeros((7937, 1), dtype=int)
+        for i in range(len(self.data)):
+            if self.data[i][6] != 0 and self.data[i][6] != 3 and self.data[i][6] != 7:
+                rank_index = self.data[i][0]
+                t1 = primify(self.data[i][1])
+                t2 = primify(self.data[i][2])
+                t3 = primify(self.data[i][3])
+                t4 = primify(self.data[i][4])
+                t5 = primify(self.data[i][5])
+                temp = np.array([t1, t2, t3, t4, t5])
+                allelse[rank_index] = int(np.prod(temp))
+            else:
+                allelse[i] = 0
+        return allelse
 
     def is_flush(self, combo):
         """
@@ -156,20 +171,29 @@ class Ranker():
         """
         return card >> 8 & 0b00000000000000001111
     
-    # def bitwise_rank(self, card):
-    #     """
-    #     Get the rank of a card
-    #     """
-    #     return card >> 8 & 0b000000000000000000001111
-    
     def bitwise_prime(self, card):
         """
         Get the prime number of a card
         """
         return card & 0b0000000000000000000011111111
+    
+    def primefactor(self, combo):
+        """
+        Get the prime factor of a 5-card combination
+        """
+        return self.bitwise_prime(combo[0]) * self.bitwise_prime(combo[1]) * self.bitwise_prime(combo[2]) * self.bitwise_prime(combo[3]) * self.bitwise_prime(combo[4])
+    
+    def save_data_to_file(self, filename):
+        """
+        Save self.data to a text file
+        """
+        np.savetxt(filename, self.data, fmt='%d', delimiter=',')    
 
 if __name__ == "__main__":
-    hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
+    # hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
+    start_time = time.time()
+    hand = np.array([[5, 3], [5, 2], [7, 3], [6, 1], [3, 0]])
     ranker = Ranker(Parser(), hand)
     binary = ranker.encode_hand(hand)
     print(ranker.rank(binary))
+    print("--- %s seconds to rank a hand ---" % (time.time() - start_time))
