@@ -11,30 +11,30 @@ def main():
     """
     Simulates a game of Texas Hold'em
     """
-    players = ["QLearningAgent", "QLearningAgent"]
+    start_balances = 200
+    players = ["QLearningAgent", "MonteCarlo"]
     i = 0
     balances = [[] for _ in players]
     sums = [0]*len(players)
     game_balances = [0]*len(players)
     games = 0
-
-    with open(os.devnull, 'w') as fnull:
-        with redirect_stdout(fnull):
-
-            n = 1000
-            while i < n:
-                g = game.Game(players, 200)
-                games += 1
-                while i < n and get_not_busted(g, 2) == len(players) and not g.user_ended:
-                    print(f"We have simulated {i} hands")
-                    g.step()
-                    i += 1
-                    for j in range(len(players)):
-                        balances[j].append(
-                            g.players[j].balance-(games*200)+sums[j])
-                        game_balances[j] = g.players[j].balance
-                for j in range(len(players)):
-                    sums[j] += game_balances[j]
+    n = 1000
+    g = game.Game(players, start_balances)
+    while i < n:
+        for player in g.players:
+            player.train = True
+            player.balance = start_balances
+        games += 1
+        while i < n and get_not_busted(g, 2) == len(players) and not g.user_ended:
+            print(f"We have simulated {i} hands")
+            g.step()
+            i += 1
+            for j in range(len(players)):
+                balances[j].append(
+                    g.players[j].balance-(games*200)+sums[j])
+                game_balances[j] = g.players[j].balance
+        for j in range(len(players)):
+            sums[j] += game_balances[j]
 
     colors = ["blue", "red", "green", "yellow", "black"]
     for j in range(len(players)):

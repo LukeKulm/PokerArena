@@ -274,7 +274,7 @@ class Random(Player):
 
 
 class QLearningAgent(Player):
-    def __init__(self, balance, epsilon=0.1, train=False, learn_frequency=100, batch_size=100):
+    def __init__(self, balance, epsilon=0.1, train=False, learn_frequency=100, batch_size=1000):
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -369,7 +369,8 @@ class QLearningAgent(Player):
 
     def train_on_buffer_data(self):
         # TODO: implement this to be called from action function every so often
-        train_q_network(self.q_network, self.buffer, batch_size=self.batch_size)
+        train_q_network(self.q_network, self.buffer,
+                        batch_size=self.batch_size)
 
 
 class MonteCarloAgent(Player):

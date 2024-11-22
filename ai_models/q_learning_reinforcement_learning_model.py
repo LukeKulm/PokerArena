@@ -10,16 +10,21 @@ StateActionNextStateInstance = namedtuple(
 
 
 class DataBuffer(object):
-    def __init__(self, maxsize=10000):
+    def __init__(self, maxsize=100000):
         self.buffer = deque(maxlen=maxsize)
 
     def add(self, state, action, reward, next_state):
         self.buffer.append(StateActionNextStateInstance(
             state, action, reward, next_state))
 
-    def sample(self, batch_len):
-        batch = random.sample(self.buffer, batch_len)
+    def sample(self, batch_size=1000):
+        batch = random.sample(self.buffer, batch_size)
         states, actions, rewards, next_states = zip(*batch)
+        states = [torch.from_numpy(state).float() for state in states]
+        actions = [torch.tensor(action) for action in actions]
+        rewards = [torch.tensor(reward).float() for reward in rewards]
+        next_states = [torch.from_numpy(next_state).float()
+                       for next_state in next_states]
         return (torch.stack(states),
                 torch.stack(actions),
                 torch.stack(rewards),
@@ -59,14 +64,16 @@ def train_q_network(q_network: PokerQNetwork, buffer: DataBuffer, batch_size=100
     if len(buffer.buffer) >= batch_size:
         loss_fn = nn.MSELoss()
         optimizer = optim.Adam(q_network.parameters(), lr=learning_rate)
-        curr_states, curr_actions, rewards, next_states = buffer.sample()
+        curr_states, curr_actions, rewards, next_states = buffer.sample(
+            batch_size)
 
         network_q_functions = q_network.forward(curr_states)
-        network_q_values = network_q_functions[curr_actions]
+        network_q_values = network_q_functions[torch.arange(
+            network_q_functions.size(0)), curr_actions]
 
-        target_q_values = q_network.gamma * \
-            q_network.forward(next_states) + rewards
-
-        loss = loss_fn(network_q_values, target_q_values)
+        target_qs, _ = torch.max(q_network.forward(next_states), dim=1)
+        target_q_values = q_network.gamma * target_qs + rewards
+        loss = loss_fn(target_q_values, network_q_values)
         loss.backward()
         optimizer.step()
+        optimizer.zero_grad()
