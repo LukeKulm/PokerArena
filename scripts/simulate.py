@@ -4,7 +4,7 @@ import game
 import torch
 import os
 import numpy as np
-from player import PLAYER_TYPES
+from player import PLAYER_TYPES, PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS
 from scripts.utils import get_not_busted
 
 
@@ -16,18 +16,20 @@ def normal_sim():
     """
     Simulates a game of Texas Hold'em
     """
-    counts = {}
+    lst = []
     for p_type in PLAYER_TYPES:
         num_of_p_type = int(input(f"Enter the number of {p_type} players: "))
         if num_of_p_type > 0:
-            counts[p_type] = num_of_p_type
+            for i in range(num_of_p_type):
+                if p_type in PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS:
+                    model_path = str(
+                        input(f"Enter the model path for {p_type} #{i}:"))
+                    if model_path == "":
+                        model_path = None
+                    lst.append((p_type, model_path))
+                else:
+                    lst.append((p_type, None))
 
-    lst = []
-    for p_type in counts.keys():
-        count = counts[p_type]
-        for _ in range(count):
-            lst.append(p_type)
-    print(lst)
     if len(lst) > 10:
         raise SimulateError(
             f"Too many players: {len(lst)}. Max allowed is 10.")

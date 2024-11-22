@@ -5,11 +5,14 @@ import os
 from contextlib import redirect_stdout
 import matplotlib.pyplot as plt
 from scripts.utils import get_not_busted
+import torch
+import argparse
+import player as p
 
 
-def main():
+def main(save_model, save_path):
     """
-    Simulates a game of Texas Hold'em
+    Simulates a game of Texas Hold'em. This is a slightly adapted version of evaluate.py.
     """
     start_balances = 200
     players = ["QLearningAgent", "MonteCarlo"]
@@ -49,7 +52,17 @@ def main():
     plt.savefig("my_plot.png")
 
     plt.show()
+    if save_model:
+        q_learning_player = g.players[0]
+        torch.save(q_learning_player.q_network.state_dict(), save_path)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Save Pytorch Model Parser")
+    parser.add_argument("--save_model", action="store_true",
+                        help="If active, saves the model to specified location")
+    parser.add_argument("--save_path", type=str, default="q_network.pth",
+                        help="Path to save the model. Defaults to q_network.pth")
+    args = parser.parse_args()
+
+    main(args.save_model, args.save_path)

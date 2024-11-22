@@ -17,7 +17,7 @@ class Game:
         self.user_ended = False
         self.num_players = len(players)
         self.players = []
-        for type in players:
+        for (type, model_path) in players:
             if type == "Human":
                 self.players.append(player.Human(start))
             elif type == "DataAggregator":
@@ -32,7 +32,7 @@ class Game:
                     player.BCPlayer(start, len(players)-1))
             elif type == "QLearningAgent":
                 self.players.append(
-                    player.QLearningAgent(start))
+                    player.QLearningAgent(start, model_path))
             elif type == "SmartBCPlayer":
                 self.players.append(
                     player.SmartBCPlayer(start, len(players)-1))
