@@ -12,6 +12,7 @@ import improve_dataset
 
 PLAYER_TYPES = ["Human", "DataAggregator",
                 "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "SmartBCPlayer"]
+PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS = set(["QLearningAgent"])
 
 
 class Player(ABC):
@@ -274,7 +275,7 @@ class Random(Player):
 
 
 class QLearningAgent(Player):
-    def __init__(self, balance, epsilon=0.01, train=False, learn_frequency=1, batch_size=50):
+    def __init__(self, balance, model_path=None, epsilon=0.01, train=False, learn_frequency=1, batch_size=50):
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -293,8 +294,11 @@ class QLearningAgent(Player):
         # action 11 is raise by double minimum amount + 65% of remaining_stack
         # action 12 is raise by double minimum amount + 80% of remaining_stack
         # action 13 is all in
-        self.q_network = PokerQNetwork(
-            state_space_size=23, action_space_size=14)
+        if model_path:
+            self.q_network = torch.load(model_path)
+        else:
+            self.q_network = PokerQNetwork(
+                state_space_size=23, action_space_size=14)
         self.prev_state = None
         self.prev_action = None
         self.prev_balance = None
@@ -327,7 +331,7 @@ class QLearningAgent(Player):
         else:
             return (2, this_round_bet, 0)
 
-    def act(self, state):
+    def get_action_train_and_add_to_buffer(self, state):
         if self.prev_state is not None and self.train:
             self.buffer.add(
                 self.prev_state, self.prev_action, self.balance - self.prev_balance, state)
@@ -343,6 +347,11 @@ class QLearningAgent(Player):
         self.prev_state = state
         self.prev_action = action
         self.prev_balance = self.balance
+
+        return action
+
+    def act(self, state):
+        action = self.get_action_train_and_add_to_buffer(state)
 
         bet = state[21] - state[22]
         if action == 0:
@@ -371,6 +380,10 @@ class QLearningAgent(Player):
         # TODO: implement this to be called from action function every so often
         train_q_network(self.q_network, self.buffer,
                         batch_size=self.batch_size)
+
+
+class MonteCarloQLeaningHybrid:
+    pass
 
 
 class MonteCarloAgent(Player):
