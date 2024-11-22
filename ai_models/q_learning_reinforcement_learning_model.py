@@ -10,7 +10,7 @@ StateActionNextStateInstance = namedtuple(
 
 
 class DataBuffer(object):
-    def __init__(self, maxsize=100000):
+    def __init__(self, maxsize=500):
         self.buffer = deque(maxlen=maxsize)
 
     def add(self, state, action, reward, next_state):
@@ -73,7 +73,7 @@ def train_q_network(q_network: PokerQNetwork, buffer: DataBuffer, batch_size=100
 
         target_qs, _ = torch.max(q_network.forward(next_states), dim=1)
         target_q_values = q_network.gamma * target_qs + rewards
-        loss = loss_fn(target_q_values, network_q_values)
+        loss = loss_fn(network_q_values, target_q_values)
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()

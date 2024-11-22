@@ -274,7 +274,7 @@ class Random(Player):
 
 
 class QLearningAgent(Player):
-    def __init__(self, balance, epsilon=0.1, train=False, learn_frequency=100, batch_size=1000):
+    def __init__(self, balance, epsilon=0.01, train=False, learn_frequency=1, batch_size=50):
         self.balance = balance
         self.folded = False
         self.allin = False
