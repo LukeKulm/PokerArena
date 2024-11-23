@@ -1,34 +1,36 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import numpy as np
 from player_action_game_state import PlayerActionGameState
-import importlib
-import os
+from game import Hand
 
 # Path to the directory containing hand histories
-history_dir = 'data/pluribus_unextracted/30'
+history_dir = '../data/pluribus_unextracted/30'
 
 files = [os.path.join(history_dir, f) for f in os.listdir(history_dir) if f.endswith('.phh')]
-print(files)
 
-# Parsing actions
+# Parsing actions with robust handling
 def parse_hole_cards(action):
-    parts = action.split()
+    parts = [p.strip("'\" ") for p in action.split()]  # Normalize split parts
     cards = parts[-1]
-    print(cards)
-    return [cards[:2], cards[2:]]
+    print("Parsed Hole Cards:", cards)
+    return cards
 
 def parse_community_cards(action):
-    parts = action.split()
+    parts = [p.strip("'\" ") for p in action.split()]  # Normalize split parts
     cards = parts[-1]
     return [cards[i:i+2] for i in range(0, len(cards), 2)]
 
 def parse_action(action, state, dealer_position):
-    print(action)
-    parts = action.split()
+    print("Raw Action:", action)
+    parts = [p.strip("'\" ") for p in action.split()]  # Normalize split parts
     action_type = parts[0]  # First part indicates the action type
+    print("Action Type:", action_type)
 
-    if action_type == "p":  # Player actions
-        player_index = int(parts[1][1]) - 1
-        player_action = parts[2]
+    if action_type.startswith("p"):  # Player actions
+        player_index = int(action_type[1]) - 1
+        player_action = parts[1]
 
         if player_action == "f":  # Fold
             state['folded'][player_index] = True
@@ -45,7 +47,7 @@ def parse_action(action, state, dealer_position):
 
     elif action_type == "d":  # Dealer actions
         dealer_action = parts[1]
-        print(dealer_action)
+        print("Dealer Action:", dealer_action)
 
         if dealer_action == "dh":  # Dealt Hole Cards
             player_index = int(parts[2][1]) - 1
@@ -70,11 +72,15 @@ def determine_stage(community_cards):
         return 3  # River
     return -1
   
-def determine_dealer_position(action, num_players):
+def determine_dealer_position(actions, num_players):
     # Find the first action in the pre-flop round
-    if action[0].startswith('p') and action[2] in ['f', 'c', 'cb', 'br']:  # Pre-flop actions
-        first_actor_index = int(action[0][1]) - 1
-        return (first_actor_index - 1) % num_players  # Dealer is the player before
+    for action in actions:
+        print("Action for position: ", action)
+        parts = [p.strip("'\" ") for p in action.split()]
+        if parts[0].startswith('p') and parts[1] in ['f', 'c', 'cb', 'br']:  # Pre-flop actions
+            first_actor_index = int(parts[0][1]) - 1
+            print("First actor index: ", first_actor_index)
+            return (first_actor_index - 1) % num_players  # Dealer is the player before
 
 # Function to encode hand history
 def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, finishing_stacks):
@@ -88,9 +94,9 @@ def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, f
     'folded': [False] * num_players,
     'pot': sum(antes) + sum(blinds_or_straddles)
   }
-
+  dealer_position = determine_dealer_position(actions, num_players)
+  print("Dealer position:", dealer_position)
   for action in actions:
-    dealer_position = determine_dealer_position(action, num_players)
     state = parse_action(action, state, dealer_position)
 
   stage = determine_stage(state['community_cards'])
