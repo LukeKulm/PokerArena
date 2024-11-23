@@ -55,23 +55,25 @@ def parse_action(action, state, dealer_position):
 
         elif dealer_action == "db":  # Dealt Board Cards
             new_cards = parse_community_cards(action)
-            state['community_cards'].extend(new_cards)
+            for card in new_cards:
+                print("card num: ", card[0], " card suit: ", card[1])
+                state['community_cards'].add_card(card[0], card[1])  # Use Hand's add_card() method
 
     return state
 
-
 # Determine the stage of the game based on community cards
 def determine_stage(community_cards):
-    if len(community_cards) == 0:
+    num_cards = len(community_cards.get_cards())  # Use Hand's cards attribute
+    if num_cards == 0:
         return 0  # Pre-flop
-    elif len(community_cards) == 3:
+    elif num_cards == 6:
         return 1  # Flop
-    elif len(community_cards) == 4:
+    elif num_cards == 8:
         return 2  # Turn
-    elif len(community_cards) == 5:
+    elif num_cards == 10:
         return 3  # River
     return -1
-  
+
 def determine_dealer_position(actions, num_players):
     # Find the first action in the pre-flop round
     for action in actions:
@@ -84,42 +86,42 @@ def determine_dealer_position(actions, num_players):
 
 # Function to encode hand history
 def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, finishing_stacks):
-  num_players = len(players)
-  # Initialize state
-  state = {
-    'num_players': num_players,
-    'hole_cards': [None] * num_players,
-    'community_cards': [],
-    'current_bets': [0] * num_players,
-    'folded': [False] * num_players,
-    'pot': sum(antes) + sum(blinds_or_straddles)
-  }
-  dealer_position = determine_dealer_position(actions, num_players)
-  print("Dealer position:", dealer_position)
-  for action in actions:
-    state = parse_action(action, state, dealer_position)
+    num_players = len(players)
+    # Initialize state
+    state = {
+        'num_players': num_players,
+        'hole_cards': [None] * num_players,
+        'community_cards': Hand(),  # Use Hand class
+        'current_bets': [0] * num_players,
+        'folded': [False] * num_players,
+        'pot': sum(antes) + sum(blinds_or_straddles)
+    }
+    dealer_position = determine_dealer_position(actions, num_players)
+    print("Dealer position:", dealer_position)
+    for action in actions:
+        state = parse_action(action, state, dealer_position)
 
-  stage = determine_stage(state['community_cards'])
+    stage = determine_stage(state['community_cards'])
 
-  # Encode for each player
-  encodings = []
-  for i in range(num_players):
-    print(state['hole_cards'])
-    player_state = PlayerActionGameState(
-      num_players=num_players,
-      num_players_folded=sum(state['folded']),
-      player_index=i,
-      player_cards=state['hole_cards'][i],
-      player_balance=finishing_stacks[i],
-      dealer_position=dealer_position,
-      stage=stage,
-      pot=state['pot'],
-      community_cards=state['community_cards'],
-      curr_bet=max(state['current_bets']),
-      amount_in_for=state['current_bets'][i]
-    )
-    encodings.append(player_state.encode())
-  return encodings
+    # Encode for each player
+    encodings = []
+    for i in range(num_players):
+        print(state['hole_cards'])
+        player_state = PlayerActionGameState(
+            num_players=num_players,
+            num_players_folded=sum(state['folded']),
+            player_index=i,
+            player_cards=state['hole_cards'][i],
+            player_balance=finishing_stacks[i],
+            dealer_position=dealer_position,
+            stage=stage,
+            pot=state['pot'],
+            community_cards=state['community_cards'],  # Extract cards from Hand
+            curr_bet=max(state['current_bets']),
+            amount_in_for=state['current_bets'][i]
+        )
+        encodings.append(player_state.encode())
+    return encodings
 
 
 # Function to read a single `.phh` file

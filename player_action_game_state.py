@@ -51,12 +51,15 @@ class PlayerActionGameState:
         state[7] = self.stage
         state[8] = self.num_players_folded
         state[9] = self.pot
+        print("Community cards: ", self.community_cards.get_cards())
+        print(self.stage)
 
         if self.stage == 0:
             for i in range(10, 20):
                 state[i] = 0
         elif self.stage == 1:
             for i in range(10, 16, 2):
+                print(i - 10)
                 state[i] = rank_to_num(self.community_cards.get_cards()[i-10])
                 state[i+1] = suit_to_num(self.community_cards.get_cards()[i-9])
 
@@ -66,8 +69,7 @@ class PlayerActionGameState:
             for i in range(10, 18, 2):
                 state[i] = rank_to_num(
                     self.community_cards.get_cards()[i-10])
-                state[i +
-                      1] = suit_to_num(self.community_cards.get_cards()[i-9])
+                state[i + 1] = suit_to_num(self.community_cards.get_cards()[i-9])
             for i in range(18, 20):
                 state[i] = 0
         else:
