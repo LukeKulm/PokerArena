@@ -14,7 +14,6 @@ files = [os.path.join(history_dir, f) for f in os.listdir(history_dir) if f.ends
 def parse_hole_cards(action):
     parts = [p.strip("'\" ") for p in action.split()]  # Normalize split parts
     cards = parts[-1]
-    print("Parsed Hole Cards:", cards)
     return cards
 
 def parse_community_cards(action):
@@ -23,27 +22,39 @@ def parse_community_cards(action):
     return [cards[i:i+2] for i in range(0, len(cards), 2)]
 
 def parse_action(action, state, dealer_position):
-    print("Raw Action:", action)
     parts = [p.strip("'\" ") for p in action.split()]  # Normalize split parts
     action_type = parts[0]  # First part indicates the action type
-    print("Action Type:", action_type)
 
     if action_type.startswith("p"):  # Player actions
         player_index = int(action_type[1]) - 1
         player_action = parts[1]
+        print("Player_action: ", player_action)
 
         if player_action == "f":  # Fold
             state['folded'][player_index] = True
 
-        elif player_action in ["cb", "br"]:  # Bet or Raise
-            bet_amount = int(parts[3])
+        elif player_action == "cc":  # Check or Call
+            # Check (when bet = 0) or Call (match the current bet)
+            call_amount = max(state['current_bets']) - state['current_bets'][player_index]
+            if call_amount > 0:  # Call
+                print(f"Player {player_index + 1} calls for {call_amount}")
+                state['current_bets'][player_index] += call_amount
+                state['pot'] += call_amount
+            else:  # Check
+                print(f"Player {player_index + 1} checks.")
+
+        elif player_action == "cbr":  # Combined Bet or Raise
+            print(parts)
+            bet_amount = int(parts[2])
+            print(f"Player {player_index + 1} bets/raises by {bet_amount}")
             state['current_bets'][player_index] += bet_amount
             state['pot'] += bet_amount
 
-        elif player_action == "c":  # Call
-            call_amount = max(state['current_bets']) - state['current_bets'][player_index]
-            state['current_bets'][player_index] += call_amount
-            state['pot'] += call_amount
+        elif player_action == "sm":  # Show/Muck Cards
+            print(state['hole_cards'][player_index])
+            shown_cards = state['hole_cards'][player_index]
+            print(f"Player {player_index + 1} shows/mucks cards: {shown_cards}")
+
 
     elif action_type == "d":  # Dealer actions
         dealer_action = parts[1]
@@ -56,7 +67,6 @@ def parse_action(action, state, dealer_position):
         elif dealer_action == "db":  # Dealt Board Cards
             new_cards = parse_community_cards(action)
             for card in new_cards:
-                print("card num: ", card[0], " card suit: ", card[1])
                 state['community_cards'].add_card(card[0], card[1])  # Use Hand's add_card() method
 
     return state
@@ -77,11 +87,9 @@ def determine_stage(community_cards):
 def determine_dealer_position(actions, num_players):
     # Find the first action in the pre-flop round
     for action in actions:
-        print("Action for position: ", action)
         parts = [p.strip("'\" ") for p in action.split()]
         if parts[0].startswith('p') and parts[1] in ['f', 'c', 'cb', 'br']:  # Pre-flop actions
             first_actor_index = int(parts[0][1]) - 1
-            print("First actor index: ", first_actor_index)
             return (first_actor_index - 1) % num_players  # Dealer is the player before
 
 # Function to encode hand history
@@ -97,16 +105,27 @@ def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, f
         'pot': sum(antes) + sum(blinds_or_straddles)
     }
     dealer_position = determine_dealer_position(actions, num_players)
-    print("Dealer position:", dealer_position)
     for action in actions:
         state = parse_action(action, state, dealer_position)
 
     stage = determine_stage(state['community_cards'])
+    
 
     # Encode for each player
     encodings = []
     for i in range(num_players):
-        print(state['hole_cards'])
+        print(f"Encoding details for player {i}:")
+        print(f"  Number of players: {num_players}")
+        print(f"  Number of players folded: {sum(state['folded'])}")
+        print(f"  Player index: {i}")
+        print(f"  Player cards: {state['hole_cards'][i]}")
+        print(f"  Player balance: {finishing_stacks[i]}")
+        print(f"  Dealer position: {dealer_position}")
+        print(f"  Stage: {stage}")
+        print(f"  Pot size: {state['pot']}")
+        print(f"  Community cards: {state['community_cards']}")  # Access cards from Hand
+        print(f"  Current bet: {max(state['current_bets'])}")
+        print(f"  Amount in for player {i}: {state['current_bets'][i]}")
         player_state = PlayerActionGameState(
             num_players=num_players,
             num_players_folded=sum(state['folded']),
@@ -153,6 +172,7 @@ def parse_hand_history(lines):
 
 for file in files:
     hand_data = read_hand_history(file)
+    print(file)
     
     encodings = encode_hand_history(
         hand_data['antes'],
@@ -164,7 +184,7 @@ for file in files:
     )
     
     # Write the encodings to a `.txt` file
-    output_file = f"{os.path.splitext(os.path.basename(file))[0]}_encodings.txt"
+    output_file = os.path.join("../data/pluribus_extracted", f"{os.path.splitext(os.path.basename(file))[0]}_encodings.txt")
     with open(output_file, "w") as f:
         for encoding in encodings:
             f.write(str(encoding) + "\n")
