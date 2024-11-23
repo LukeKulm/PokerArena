@@ -602,7 +602,97 @@ class SmartBCPlayer(BCPlayer):
                 else:
                     self.raises += 1
                     return (2, amount, 0)
+                
+class PokerTheoryQAgent(QLearningAgent):
+    def __init__(self, balance, ranker, model_path = None, epsilon = 0.01, train = False, 
+                 learn_frequency = 1, batch_size = 50, eps_decay = 0.999, eps_floor = 0.01): # try different epsilon values
+        super().__init__(balance=balance, model_path=model_path, epsilon=epsilon, train=train,
+                          learn_frequency=learn_frequency, batch_size=batch_size)
+        self.q_network = PokerQNetwork(state_space_size = 25, action_space_size = 14)
+        if model_path:
+            self.q_network.load_state_dict(torch.load(model_path))
 
+        # loading in ranker for hand evaluation
+        self.ranker = ranker
+
+        # trying epsilon-decreasing, assuming convergence on good policy
+        self.epsilon = epsilon
+        self.eps_decay = eps_decay
+        self.eps_floor = eps_floor
+
+    def update_epsilon(self):
+        self.epsilon = max(self.epsilon * self.eps_decay, self.eps_floor)
+
+    def rank_state(self, state):
+        hole_card_1 = state[2:4]
+        hole_card_2 = state[4:6]
+        hole_cards = np.array([hole_card_1, hole_card_2])
+        stage = state[7]
+        rank_preflop = self.ranker.preflop_rank(hole_cards) # preflop rank
+        if stage == 0:
+            # no post-flop rank
+            rank = 0 # should this be 0 or -1????
+        if stage == 1:
+            # rank 5-card hand
+            board = np.append(hole_cards, state[10:16])
+            rank = self.ranker.rank(board)
+        elif stage == 2:
+            # rank 6-card hand
+            board = np.append(hole_cards, state[10:18]) # 6-card board
+            rank = self.ranker.rank(board)
+        else:
+            # rank 7-card hand
+            board = np.append(hole_cards, state[10:20]) # 7-card board
+            rank = self.ranker.rank(board)
+        return np.append(state, [rank_preflop, rank])
+    
+    def get_action_train_and_add_to_buffer(self, state):
+            state = self.rank_state(state) # only change from superclass
+            if self.prev_state is not None and self.train:
+                self.buffer.add(
+                    self.prev_state, self.prev_action, self.balance - self.prev_balance, state)
+            if self.train:
+                if self.iteration % self.learn_frequency == 0:
+                    self.iteration = 0
+                    self.train_on_buffer_data()
+                else:
+                    self.iteration += 1
+
+            action = self.q_network.get_action(state, self.epsilon)
+
+            self.prev_state = state
+            self.prev_action = action
+            self.prev_balance = self.balance
+
+            return action
+
+    def act(self, state):
+        state = self.rank_state(state) # only change from superclass
+        action = self.get_action_train_and_add_to_buffer(state)
+
+        bet = state[21] - state[22]
+        if action == 0:
+            # fold
+            return (0, 0, 0)
+        if bet >= self.balance:
+            # if bet is larger than AI balance, go all in after this point
+            self.allin = True
+            return (1, self.balance, 1)
+        if action == 1:
+            return (1, bet, 0)
+        elif action == 2:
+            min_bet = 2
+            if bet != 0:
+                min_bet = 2*bet
+            if min_bet >= self.balance:
+                self.allin = True
+                return (2, self.balance, 1)
+            else:
+                return (2, min_bet, 0)
+        else:
+            return self.bet_by_double_min_bet_plus_percentage(
+                bet, self.action_to_additional_percentage[action])
+        
 
 class AIBasedAgent(Player):
     def __init__(self, balance):

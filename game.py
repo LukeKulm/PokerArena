@@ -33,6 +33,9 @@ class Game:
             elif type == "QLearningAgent":
                 self.players.append(
                     player.QLearningAgent(start, model_path))
+            elif type == "PokerTheoryQAgent":
+                self.players.append(
+                    player.PokerTheoryQAgent(start, model_path))
             elif type == "SmartBCPlayer":
                 self.players.append(
                     player.SmartBCPlayer(start, len(players)-1))
