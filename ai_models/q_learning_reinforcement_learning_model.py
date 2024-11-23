@@ -77,3 +77,24 @@ def train_q_network(q_network: PokerQNetwork, buffer: DataBuffer, batch_size=100
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
+    
+def supervised_finetune(q_network, expert_states, expert_actions, epochs=10, batch_size=100, learning_rate=1e-3):
+    dataset = 5 #TODO: fix this
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    
+    loss_fn = nn.CrossEntropyLoss() #TODO, probably change this since want bet amount to be included as part of loss, but also could just focus on action and not bet amount
+    optimizer = optim.Adam(q_network.parameters(), lr=learning_rate)
+
+    for epoch in range(epochs):
+        total_loss = 0
+        for states, actions in dataloader:
+            q_values = q_network.forward(states)
+            
+            loss = loss_fn(q_values, actions.long())
+            total_loss += loss.item()
+
+            # Backward pass and optimization
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+    
