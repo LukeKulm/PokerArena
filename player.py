@@ -11,8 +11,9 @@ import numpy as np
 import improve_dataset
 
 PLAYER_TYPES = ["Human", "DataAggregator",
-                "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "SmartBCPlayer"]
-PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS = set(["QLearningAgent"])
+                "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "MonteCarloQLearningHybrid" "SmartBCPlayer"]
+PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS = set(
+    ["QLearningAgent", "MonteCarloQLearningHybrid"])
 
 
 class Player(ABC):
@@ -381,8 +382,37 @@ class QLearningAgent(Player):
                         batch_size=self.batch_size)
 
 
-class MonteCarloQLeaningHybrid:
-    pass
+class MonteCarloQLearningHybrid(QLearningAgent):
+    def __init__(self, balance, model_path=None, epsilon=0.01, train=False, learn_frequency=1, batch_size=50):
+        super().__init__(balance=balance, model_path=None, epsilon=epsilon, train=train,
+                         learn_frequency=learn_frequency, batch_size=batch_size)
+        self.q_network = PokerQNetwork(
+            state_space_size=24, action_space_size=14)
+        if model_path:
+            self.q_network.load_state_dict(torch.load(model_path))
+
+    def get_action_train_and_add_to_buffer(self, state):
+        num_still_in = state[0] - state[8] - 1
+        prediction = simulate_games.expected_win_rate(
+            state[2:6], state[10:20], num_still_in)
+        state = np.append(state, prediction)
+        if self.prev_state is not None and self.train:
+            self.buffer.add(
+                self.prev_state, self.prev_action, self.balance - self.prev_balance, state)
+        if self.train:
+            if self.iteration % self.learn_frequency == 0:
+                self.iteration = 0
+                self.train_on_buffer_data()
+            else:
+                self.iteration += 1
+
+        action = self.q_network.get_action(state, self.epsilon)
+
+        self.prev_state = state
+        self.prev_action = action
+        self.prev_balance = self.balance
+
+        return action
 
 
 class MonteCarloAgent(Player):
@@ -404,7 +434,7 @@ class MonteCarloAgent(Player):
         """
         bet = state[21] - state[22]
         win_rate = simulate_games.expected_win_rate(
-            state[2:6], state[10:20], self.number_of_opps)
+            state[2:6], state[10:20], state[0] - state[8] - 1)
         if bet == 0:
             if win_rate > 0.98:
                 self.allin = True
@@ -608,7 +638,7 @@ class SmartBCPlayer(BCPlayer):
 class PokerTheoryQAgent(QLearningAgent):
     def __init__(self, balance, ranker, model_path=None, epsilon=0.01, train=False,
                  learn_frequency=1, batch_size=50, eps_decay=0.999, eps_floor=0.01):  # try different epsilon values
-        super().__init__(balance=balance, model_path=model_path, epsilon=epsilon, train=train,
+        super().__init__(balance=balance, model_path=None, epsilon=epsilon, train=train,
                          learn_frequency=learn_frequency, batch_size=batch_size)
         self.q_network = PokerQNetwork(
             state_space_size=25, action_space_size=14)
