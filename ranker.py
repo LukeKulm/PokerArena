@@ -102,7 +102,7 @@ class Ranker():
         """
         Creates lookup table for all flushes (5-card same-suit hands)
         """
-        flushes = np.zeros((7462, 1), dtype='int64')
+        flushes = np.zeros((7937, 1), dtype='int64')
         for row in self.data:
            if row[6] == 0:
                index = row[1] | row[2] | row[3] | row[4] | row[5]
@@ -114,7 +114,7 @@ class Ranker():
         Creates lookup table for all straights or high card hands (5-card hands with unique ranks)
         Different from flushes because possibility of conflicting indices
         """
-        unique = np.zeros((7462, 1), dtype=int)
+        unique = np.zeros((7937, 1), dtype=int)
         for row in self.data:
             if row[6] == 3 or row[6] == 7: # straight or high card
                 index = row[1] | row[2] | row[3] | row[4] | row[5]
