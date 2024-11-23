@@ -5,7 +5,7 @@ from collections import deque
 import random
 import numpy as np
 
-class DataBuffer(object):
+class DataBuffer:
     def __init__(self, maxsize=500):
         self.buffer = deque(maxlen=maxsize)
 
@@ -43,14 +43,14 @@ class PokerQNetwork(nn.Module):
         q_values = self.fc4(x)
         return q_values
 
-    def get_action(self, state, epsilon):
+    def select_action(self, state, epsilon):
         # takes as input numpy.ndarray
         # epsilon greedy to explore action space
         # might be other functions to try as well such as multiarmed bandit?
-        state = torch.from_numpy(state).float()
         if np.random.rand() < epsilon:
             return np.random.randint(0, self.action_space_size)
         else:
+            state = torch.from_numpy(state).float()
             q_function_values = self.forward(state)
             return int(torch.argmax(q_function_values))
 

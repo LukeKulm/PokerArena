@@ -342,7 +342,7 @@ class QLearningAgent(Player):
             else:
                 self.iteration += 1
 
-        action = self.q_network.get_action(state, self.epsilon)
+        action = self.q_network.select_action(state, self.epsilon)
 
         self.prev_state = state
         self.prev_action = action
@@ -406,7 +406,7 @@ class MonteCarloQLearningHybrid(QLearningAgent):
             else:
                 self.iteration += 1
 
-        action = self.q_network.get_action(state, self.epsilon)
+        action = self.q_network.select_action(state, self.epsilon)
 
         self.prev_state = state
         self.prev_action = action
@@ -691,7 +691,7 @@ class PokerTheoryQAgent(QLearningAgent):
             else:
                 self.iteration += 1
 
-        action = self.q_network.get_action(state, self.epsilon)
+        action = self.q_network.select_action(state, self.epsilon)
 
         self.prev_state = state
         self.prev_action = action
