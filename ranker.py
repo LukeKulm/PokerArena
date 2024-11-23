@@ -6,7 +6,9 @@ from universal_card_functions import rank_to_prime, primify
 
 class Ranker():
     """
-    Class that provides ranking of hands according to equivalence classes
+    Class that provides ranking of hands according to the 7,462 equivalence 
+    classes that exist in Texas Hold'em Poker
+    (Pre-flop hand rankings are indexed to 7,462)
     """
 
     def __init__(self, parser, hand):
@@ -16,7 +18,6 @@ class Ranker():
         self.preflop = self.parser.get_preflop() # preflop parsed data
         self.hand = hand
         self.hand_binary = self.encode_hand(hand)
-        # self.hand_binary = np.zeros((len(hand),), dtype=int)
         self.flushes = self.flush_table()
         self.unique = self.unique_ranks()
         self.allelse = self.all_else()
@@ -67,7 +68,6 @@ class Ranker():
                 s = 0b0010
             else:
                 s = 0b0001
-            # r = hand[i, 0] - 2
             p = rank_to_prime(hand[i, 0])
             hand_binary[i] = (v << 12) | (s << 8) | p
         return hand_binary
@@ -102,7 +102,7 @@ class Ranker():
         """
         Creates lookup table for all flushes (5-card same-suit hands)
         """
-        flushes = np.zeros((7937, 1), dtype='int64')
+        flushes = np.zeros((7462, 1), dtype='int64')
         for row in self.data:
            if row[6] == 0:
                index = row[1] | row[2] | row[3] | row[4] | row[5]
@@ -114,7 +114,7 @@ class Ranker():
         Creates lookup table for all straights or high card hands (5-card hands with unique ranks)
         Different from flushes because possibility of conflicting indices
         """
-        unique = np.zeros((7937, 1), dtype=int)
+        unique = np.zeros((7462, 1), dtype=int)
         for row in self.data:
             if row[6] == 3 or row[6] == 7: # straight or high card
                 index = row[1] | row[2] | row[3] | row[4] | row[5]
@@ -124,11 +124,13 @@ class Ranker():
     def all_else(self):
         """
         Creates lookup table for all other hands (full house, four of a kind, three of a kind, pairs)
+        Uses the fact that all other hands have prime factorizations that are unique
+        I.e. the multiplcation of the prime encodings will create a unique value
         """
-        allelse = np.zeros((7937, 1), dtype=int)
+        allelse = np.zeros((7462, 1), dtype=int)
         for i in range(len(self.data)):
             if self.data[i][6] != 0 and self.data[i][6] != 3 and self.data[i][6] != 7:
-                rank_index = self.data[i][0]
+                rank_index = self.data[i][0] # THIS MIGHT BREAK ON THE LAST INDEX -- TEST IT
                 t1 = primify(self.data[i][1])
                 t2 = primify(self.data[i][2])
                 t3 = primify(self.data[i][3])
@@ -190,9 +192,8 @@ class Ranker():
         np.savetxt(filename, self.data, fmt='%d', delimiter=',')    
 
 if __name__ == "__main__":
-    # hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
+    hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
     start_time = time.time()
-    hand = np.array([[5, 3], [5, 2], [7, 3], [6, 1], [3, 0]])
     ranker = Ranker(Parser(), hand)
     binary = ranker.encode_hand(hand)
     print(ranker.rank(binary))
