@@ -1,21 +1,16 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from collections import deque, namedtuple
+from collections import deque
 import random
 import numpy as np
-
-StateActionNextStateInstance = namedtuple(
-    'StateActionNextStateInstance', ('curr_state', 'curr_action', 'reward', 'next_state'))
-
 
 class DataBuffer(object):
     def __init__(self, maxsize=500):
         self.buffer = deque(maxlen=maxsize)
 
     def add(self, state, action, reward, next_state):
-        self.buffer.append(StateActionNextStateInstance(
-            state, action, reward, next_state))
+        self.buffer.append((state, action, reward, next_state))
 
     def sample(self, batch_size=1000):
         batch = random.sample(self.buffer, batch_size)
