@@ -1,7 +1,7 @@
 # interface for players and some instances including "user entry"
 
 import torch
-from bc import NN
+from ai_models.bc import NN
 import random
 from abc import ABC, abstractmethod
 import simulate_games
