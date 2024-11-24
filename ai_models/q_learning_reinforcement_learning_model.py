@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from collections import deque
+from collections import deque, namedtuple
 import random
 import numpy as np
 
@@ -88,6 +88,7 @@ def train_q_network(q_network: PokerQNetwork, buffer: DataBuffer, batch_size=100
         optimizer.zero_grad()
     
 def supervised_finetune(q_network, expert_data, epochs=10, batch_size=100, learning_rate=1e-3):
+    #TODO: need to extract actions and need to turn actions into 1 of 14 actions
     dataset = ExpertDataset(expert_data)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     
@@ -103,7 +104,6 @@ def supervised_finetune(q_network, expert_data, epochs=10, batch_size=100, learn
             loss = loss_fn(q_values, actions.long())
             total_loss += loss.item()
 
-            # Backward pass and optimization
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()

@@ -280,7 +280,7 @@ class QLearningAgent(Player):
         self.balance = balance
         self.folded = False
         self.allin = False
-        # 13 actions total
+        # 14 actions total
         # action 0 is fold
         # action 1 is call
         # action 2 is raise by minimum amount
