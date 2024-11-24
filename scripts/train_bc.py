@@ -1,4 +1,4 @@
-from bc import NN
+from ai_models.bc import NN
 import torch
 
 if __name__ == "__main__":
