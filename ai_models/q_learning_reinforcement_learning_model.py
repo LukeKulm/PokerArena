@@ -5,7 +5,21 @@ from collections import deque
 import random
 import numpy as np
 
-class DataBuffer:
+StateActionNextStateInstance = namedtuple(
+    'StateActionNextStateInstance', ('curr_state', 'curr_action', 'reward', 'next_state'))
+
+class ExpertDataset(torch.utils.data.Dataset):
+    def __init__(self, data):
+        self.states = states
+        self.actions = actions
+
+    def __len__(self):
+        return len(self.states)
+
+    def __getitem__(self, idx):
+        return torch.tensor(self.states[idx]).float(), torch.tensor(self.actions[idx])
+
+class DataBuffer(object):
     def __init__(self, maxsize=500):
         self.buffer = deque(maxlen=maxsize)
 
@@ -73,8 +87,8 @@ def train_q_network(q_network: PokerQNetwork, buffer: DataBuffer, batch_size=100
         optimizer.step()
         optimizer.zero_grad()
     
-def supervised_finetune(q_network, expert_states, expert_actions, epochs=10, batch_size=100, learning_rate=1e-3):
-    dataset = 5 #TODO: fix this
+def supervised_finetune(q_network, expert_data, epochs=10, batch_size=100, learning_rate=1e-3):
+    dataset = ExpertDataset(expert_data)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     
     loss_fn = nn.CrossEntropyLoss() #TODO, probably change this since want bet amount to be included as part of loss, but also could just focus on action and not bet amount
@@ -85,6 +99,7 @@ def supervised_finetune(q_network, expert_states, expert_actions, epochs=10, bat
         for states, actions in dataloader:
             q_values = q_network.forward(states)
             
+            #whats this actions.long() buisness
             loss = loss_fn(q_values, actions.long())
             total_loss += loss.item()
 

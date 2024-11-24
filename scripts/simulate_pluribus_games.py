@@ -1,11 +1,6 @@
-import sys
-import argparse
-import game
 import torch
 import os
 import numpy as np
-from player import PLAYER_TYPES, PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS
-from scripts.utils import get_not_busted
 
 def extract_moves(state):
   """gets the moves the player made in the game"""
