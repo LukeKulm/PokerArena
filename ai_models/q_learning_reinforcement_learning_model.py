@@ -113,6 +113,7 @@ class PokerQNetwork(nn.Module):
 
 def train_q_network(q_network: PokerQNetwork, buffer: DataBuffer, batch_size=100, learning_rate=1e-3):
     if len(buffer.buffer) >= batch_size:
+        # we may also want to consider huber loss or SmoothL1Loss or etc...
         loss_fn = nn.MSELoss()
         optimizer = optim.Adam(q_network.parameters(), lr=learning_rate)
         curr_states, curr_actions, rewards, next_states = buffer.weighted_sample(batch_size)

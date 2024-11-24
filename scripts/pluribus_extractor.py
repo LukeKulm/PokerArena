@@ -23,54 +23,40 @@ def parse_community_cards(action):
     return [cards[i:i+2] for i in range(0, len(cards), 2)]
 
 def parse_action(action, state, dealer_position):
-    parts = [p.strip("'\" ") for p in action.split()]  # Normalize split parts
-    action_type = parts[0]  # First part indicates the action type
+    parts = [p.strip("'\" ") for p in action.split()]
+    action_type = parts[0]
+    player_index = -1
+    action_label = None
 
     if action_type.startswith("p"):  # Player actions
         player_index = int(action_type[1]) - 1
         player_action = parts[1]
-        print("Player_action: ", player_action)
+        action_label = player_action  # Label this action
 
         if player_action == "f":  # Fold
             state['folded'][player_index] = True
-
         elif player_action == "cc":  # Check or Call
-            # Check (when bet = 0) or Call (match the current bet)
             call_amount = max(state['current_bets']) - state['current_bets'][player_index]
-            if call_amount > 0:  # Call
-                print(f"Player {player_index + 1} calls for {call_amount}")
-                state['current_bets'][player_index] += call_amount
-                state['pot'] += call_amount
-            else:  # Check
-                print(f"Player {player_index + 1} checks.")
-
-        elif player_action == "cbr":  # Combined Bet or Raise
-            print(parts)
+            state['current_bets'][player_index] += call_amount
+            state['pot'] += call_amount
+        elif player_action == "cbr":  # Bet or Raise
             bet_amount = int(parts[2])
-            print(f"Player {player_index + 1} bets/raises by {bet_amount}")
             state['current_bets'][player_index] += bet_amount
             state['pot'] += bet_amount
-
         elif player_action == "sm":  # Show/Muck Cards
-            print(state['hole_cards'][player_index])
             shown_cards = state['hole_cards'][player_index]
-            print(f"Player {player_index + 1} shows/mucks cards: {shown_cards}")
-
 
     elif action_type == "d":  # Dealer actions
         dealer_action = parts[1]
-        print("Dealer Action:", dealer_action)
-
         if dealer_action == "dh":  # Dealt Hole Cards
             player_index = int(parts[2][1]) - 1
             state['hole_cards'][player_index] = parse_hole_cards(action)
-
         elif dealer_action == "db":  # Dealt Board Cards
             new_cards = parse_community_cards(action)
             for card in new_cards:
-                state['community_cards'].add_card(card[0], card[1])  # Use Hand's add_card() method
+                state['community_cards'].add_card(card[0], card[1])
 
-    return state
+    return state, (player_index, action_label)
 
 # Determine the stage of the game based on community cards
 def determine_stage(community_cards):
@@ -96,51 +82,74 @@ def determine_dealer_position(actions, num_players):
 # Function to encode hand history
 def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, finishing_stacks):
     num_players = len(players)
-    # Initialize state
     state = {
         'num_players': num_players,
         'hole_cards': [None] * num_players,
-        'community_cards': Hand(),  # Use Hand class
+        'community_cards': Hand(),
         'current_bets': [0] * num_players,
         'folded': [False] * num_players,
-        'pot': sum(antes) + sum(blinds_or_straddles)
+        'pot': sum(antes) + sum(blinds_or_straddles),
     }
     dealer_position = determine_dealer_position(actions, num_players)
-    for action in actions:
-        state = parse_action(action, state, dealer_position)
-
-    stage = determine_stage(state['community_cards'])
     
+    # Initialize the encodings dictionary for each player
+    encodings = {player: [] for player in range(num_players)}
+    
+    # Set initial bets from blinds/straddles
+    for i, amount in enumerate(blinds_or_straddles):
+        if amount > 0:
+            state['current_bets'][i] = amount
 
-    # Encode for each player
-    encodings = []
-    for i in range(num_players):
-        print(f"Encoding details for player {i}:")
-        print(f"  Number of players: {num_players}")
-        print(f"  Number of players folded: {sum(state['folded'])}")
-        print(f"  Player index: {i}")
-        print(f"  Player cards: {state['hole_cards'][i]}")
-        print(f"  Player balance: {finishing_stacks[i]}")
-        print(f"  Dealer position: {dealer_position}")
-        print(f"  Stage: {stage}")
-        print(f"  Pot size: {state['pot']}")
-        print(f"  Community cards: {state['community_cards']}")  # Access cards from Hand
-        print(f"  Current bet: {max(state['current_bets'])}")
-        print(f"  Amount in for player {i}: {state['current_bets'][i]}")
-        player_state = PlayerActionGameState(
-            num_players=num_players,
-            num_players_folded=sum(state['folded']),
-            player_index=i,
-            player_cards=state['hole_cards'][i],
-            player_balance=finishing_stacks[i],
-            dealer_position=dealer_position,
-            stage=stage,
-            pot=state['pot'],
-            community_cards=state['community_cards'],  # Extract cards from Hand
-            curr_bet=max(state['current_bets']),
-            amount_in_for=state['current_bets'][i]
-        )
-        encodings.append(player_state.encode())
+    for action in actions:
+        # Parse action parts
+        parts = [p.strip("'\" ") for p in action.split()]
+        action_type = parts[0]
+        
+        # Only process player actions (skip dealer actions)
+        if action_type.startswith("p"):
+            player_index = int(action_type[1]) - 1
+            player_action = parts[1]
+            
+            # Create a deep copy of the current state before the action
+            pre_action_state = PlayerActionGameState(
+                num_players=num_players,
+                num_players_folded=sum(state['folded']),
+                player_index=player_index,
+                player_cards=state['hole_cards'][player_index],
+                player_balance=finishing_stacks[player_index],
+                dealer_position=dealer_position,
+                stage=determine_stage(state['community_cards']),
+                pot=state['pot'],
+                community_cards=state['community_cards'],
+                curr_bet=max(state['current_bets']),
+                amount_in_for=state['current_bets'][player_index],
+            ).encode()
+            
+            # Store the state-action pair for this player
+            encodings[player_index].append((pre_action_state, action))
+            
+            # Update the state based on the action
+            if player_action == "f":  # Fold
+                state['folded'][player_index] = True
+            elif player_action == "cc":  # Check/Call
+                call_amount = max(state['current_bets']) - state['current_bets'][player_index]
+                state['current_bets'][player_index] += call_amount
+                state['pot'] += call_amount
+            elif player_action == "cbr":  # Bet/Raise
+                bet_amount = int(parts[2])
+                state['current_bets'][player_index] += bet_amount
+                state['pot'] += bet_amount
+        
+        elif action_type == "d":  # Dealer
+            dealer_action = parts[1]
+            if dealer_action == "dh":  # Dealt Hole Cards
+                player_index = int(parts[2][1]) - 1
+                state['hole_cards'][player_index] = parse_hole_cards(action)
+            elif dealer_action == "db":  # Dealt Board Cards
+                new_cards = parse_community_cards(action)
+                for card in new_cards:
+                    state['community_cards'].add_card(card[0], card[1])
+
     return encodings
 
 
@@ -187,8 +196,18 @@ for file in files:
     # Write the encodings to a json file
     output_file = os.path.join("data/pluribus_extracted", f"{os.path.splitext(os.path.basename(file))[0]}_encodings.json")
     
+    serialized_encodings = {
+        str(player_index): [
+            {"state": state.tolist(), "action": action}
+            for state, action in action_list
+        ]
+        for player_index, action_list in encodings.items()
+    }
+
+    # Save to the output file
     with open(output_file, "w") as f:
-        json.dump([array.tolist() for array in encodings], f, indent=4)
+        json.dump(serialized_encodings, f, indent=4)
+
     print(f"Encodings written to {output_file}")
   
 

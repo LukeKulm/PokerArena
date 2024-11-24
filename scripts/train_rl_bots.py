@@ -15,7 +15,7 @@ def main(save_model, save_path):
     Simulates a game of Texas Hold'em. This is a slightly adapted version of evaluate.py.
     """
     start_balances = 200
-    players = [("QLearningAgent", None), ("MonteCarlo", None)]
+    players = [("MonteCarloQLearningHybrid", None), ("QLearningAgent", None)]
     i = 0
     balances = [[] for _ in players]
     sums = [0]*len(players)
