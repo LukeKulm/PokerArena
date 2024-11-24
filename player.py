@@ -12,9 +12,9 @@ import improve_dataset
 from action import Action
 
 PLAYER_TYPES = ["Human", "DataAggregator",
-                "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "MonteCarloQLearningHybrid", "SmartBCPlayer"]
+                "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "MonteCarloQLearningHybrid", "PokerTheoryQAgent", "SmartBCPlayer"]
 PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS = set(
-    ["QLearningAgent", "MonteCarloQLearningHybrid"])
+    ["QLearningAgent", "PokerTheoryQAgent", "MonteCarloQLearningHybrid"])
 
 
 class Player(ABC):
@@ -667,19 +667,25 @@ class PokerTheoryQAgent(QLearningAgent):
         if stage == 0:
             # no post-flop rank
             rank = 0  # should this be 0 or -1????
-        if stage == 1:
+        elif stage == 1:
             # rank 5-card hand
-            board = np.append(hole_cards, state[10:16])
-            rank = self.ranker.rank(board)
+            board = np.array([hole_card_1, hole_card_2, state[10:12], state[12:14], state[14:16]])
+            print('5-card board')
+            print(board)
+            rank = self.ranker.rank(board) # 5-card board
         elif stage == 2:
             # rank 6-card hand
-            board = np.append(hole_cards, state[10:18])  # 6-card board
-            rank = self.ranker.rank(board)
+            board = np.array([hole_card_1, hole_card_2, state[10:12], state[12:14], state[14:16], state[16:18]])
+            print('6-card board')
+            print(board)
+            rank = self.ranker.rank(board) # 6-card board
         else:
             # rank 7-card hand
-            board = np.append(hole_cards, state[10:20])  # 7-card board
-            rank = self.ranker.rank(board)
-        return np.append(state, [rank_preflop, rank])
+            board = np.array([hole_card_1, hole_card_2, state[10:12], state[12:14], state[14:16], state[16:18], state[18:20]])
+            print('7-card board')
+            print(board)
+            rank = self.ranker.rank(board) # 7-card board
+        return np.append(state, [rank_preflop, rank]) # check if this correct
 
     def get_action_train_and_add_to_buffer(self, state):
             state = self.rank_state(state) # 1/2 changes from superclass
@@ -694,7 +700,7 @@ class PokerTheoryQAgent(QLearningAgent):
                     self.iteration += 1
 
             self.update_epsilon() # 2/2 changes from superclass
-            action = self.q_network.get_action(state, self.epsilon)
+            action = self.q_network.select_action(state, self.epsilon)
 
             self.prev_state = state
             self.prev_action = action
