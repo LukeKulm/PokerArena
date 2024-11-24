@@ -1,12 +1,13 @@
 import sys
 import os
+import json
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import numpy as np
 from player_action_game_state import PlayerActionGameState
 from game import Hand
 
 # Path to the directory containing hand histories
-history_dir = '../data/pluribus_unextracted/30'
+history_dir = 'data/pluribus_unextracted/30'
 
 files = [os.path.join(history_dir, f) for f in os.listdir(history_dir) if f.endswith('.phh')]
 
@@ -183,11 +184,11 @@ for file in files:
         hand_data['finishing_stacks']
     )
     
-    # Write the encodings to a `.txt` file
-    output_file = os.path.join("../data/pluribus_extracted", f"{os.path.splitext(os.path.basename(file))[0]}_encodings.txt")
+    # Write the encodings to a json file
+    output_file = os.path.join("data/pluribus_extracted", f"{os.path.splitext(os.path.basename(file))[0]}_encodings.json")
+    
     with open(output_file, "w") as f:
-        for encoding in encodings:
-            f.write(str(encoding) + "\n")
+        json.dump([array.tolist() for array in encodings], f, indent=4)
     print(f"Encodings written to {output_file}")
   
 
