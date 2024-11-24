@@ -696,11 +696,11 @@ class PokerTheoryQAgent(QLearningAgent):
             self.update_epsilon() # 2/2 changes from superclass
             action = self.q_network.get_action(state, self.epsilon)
 
-        self.prev_state = state
-        self.prev_action = action
-        self.prev_balance = self.balance
+            self.prev_state = state
+            self.prev_action = action
+            self.prev_balance = self.balance
 
-        return action
+            return action
 
     def act(self, state):
         state = self.rank_state(state)  # only change from superclass
