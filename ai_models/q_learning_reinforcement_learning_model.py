@@ -13,11 +13,6 @@ import numpy as np
 class QLearningException(Exception):
     pass
 
-class DataBuffer:
-    def __init__(self, maxlen=500):
-        self.buffer = deque(maxlen=maxlen)
-
-
 class ExpertDataset(torch.utils.data.Dataset):
     def __init__(self, data):
         self.states = states
@@ -30,8 +25,8 @@ class ExpertDataset(torch.utils.data.Dataset):
         return torch.tensor(self.states[idx]).float(), torch.tensor(self.actions[idx])
 
 class DataBuffer(object):
-    def __init__(self, maxsize=500):
-        self.buffer = deque(maxlen=maxsize)
+    def __init__(self, maxlen=500):
+        self.buffer = deque(maxlen=maxlen)
 
     def add(self, state, action, reward, next_state):
         # may want to add done state to indicate that either this
