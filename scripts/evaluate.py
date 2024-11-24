@@ -11,7 +11,8 @@ def main():
     """
     Simulates a game of Texas Hold'em
     """
-    players = ["Random", "SmartBCPlayer"]
+    players = [("MonteCarloQLearningHybrid",
+                "saved_models/q_network_with_montecarlo.pth"), ("QLearningAgent", "saved_models/q_network.pth")]
     i = 0
     balances = [[] for _ in players]
     sums = [0]*len(players)
@@ -21,7 +22,7 @@ def main():
     with open(os.devnull, 'w') as fnull:
         with redirect_stdout(fnull):
 
-            n = 1000
+            n = 100
             while i < n:
                 g = game.Game(players, 200)
                 games += 1
@@ -41,7 +42,7 @@ def main():
         plt.plot(range(len(balances[j])), balances[j], color=colors[j])
     title = ""
     for j in range(len(players)):
-        title += players[j]+" ("+colors[j]+"), "
+        title += players[0][j]+" ("+colors[j]+"), "
     plt.title(f'{title}over {n} hands which took {games} games')
     plt.xlabel('# of hands')
     plt.ylabel('Net Gain')
