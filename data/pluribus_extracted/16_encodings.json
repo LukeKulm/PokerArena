@@ -26,7 +26,7 @@
                 200,
                 50
             ],
-            "action": "cc"
+            "action": "'p1 cc'"
         },
         {
             "state": [
@@ -54,7 +54,7 @@
                 200,
                 200
             ],
-            "action": "cc"
+            "action": "'p1 cc'"
         },
         {
             "state": [
@@ -82,7 +82,7 @@
                 200,
                 200
             ],
-            "action": "cc"
+            "action": "'p1 cc'"
         },
         {
             "state": [
@@ -110,7 +110,7 @@
                 700,
                 200
             ],
-            "action": "f"
+            "action": "'p1 f'"
         }
     ],
     "1": [
@@ -140,7 +140,7 @@
                 200,
                 100
             ],
-            "action": "cc"
+            "action": "'p2 cc'"
         },
         {
             "state": [
@@ -168,7 +168,7 @@
                 200,
                 200
             ],
-            "action": "cc"
+            "action": "'p2 cc'"
         },
         {
             "state": [
@@ -196,7 +196,7 @@
                 200,
                 200
             ],
-            "action": "cc"
+            "action": "'p2 cc'"
         },
         {
             "state": [
@@ -224,7 +224,7 @@
                 700,
                 200
             ],
-            "action": "cbr"
+            "action": "'p2 cbr 1400'"
         },
         {
             "state": [
@@ -252,7 +252,7 @@
                 4050,
                 1600
             ],
-            "action": "cbr"
+            "action": "'p2 cbr 7100'"
         }
     ],
     "2": [
@@ -282,7 +282,7 @@
                 100,
                 0
             ],
-            "action": "f"
+            "action": "'p3 f'"
         }
     ],
     "3": [
@@ -312,7 +312,7 @@
                 100,
                 0
             ],
-            "action": "cbr"
+            "action": "'p4 cbr 200'"
         },
         {
             "state": [
@@ -340,7 +340,7 @@
                 200,
                 200
             ],
-            "action": "cc"
+            "action": "'p4 cc'"
         },
         {
             "state": [
@@ -368,7 +368,7 @@
                 200,
                 200
             ],
-            "action": "cbr"
+            "action": "'p4 cbr 500'"
         },
         {
             "state": [
@@ -396,7 +396,7 @@
                 1600,
                 700
             ],
-            "action": "cbr"
+            "action": "'p4 cbr 3350'"
         },
         {
             "state": [
@@ -424,7 +424,7 @@
                 8700,
                 4050
             ],
-            "action": "f"
+            "action": "'p4 f'"
         }
     ],
     "4": [
@@ -454,7 +454,7 @@
                 200,
                 0
             ],
-            "action": "f"
+            "action": "'p5 f'"
         }
     ],
     "5": [
@@ -484,7 +484,7 @@
                 200,
                 0
             ],
-            "action": "cc"
+            "action": "'p6 cc'"
         },
         {
             "state": [
@@ -512,7 +512,7 @@
                 200,
                 200
             ],
-            "action": "cc"
+            "action": "'p6 cc'"
         },
         {
             "state": [
@@ -540,7 +540,7 @@
                 700,
                 200
             ],
-            "action": "f"
+            "action": "'p6 f'"
         }
     ]
 }

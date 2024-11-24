@@ -126,7 +126,7 @@ def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, f
             ).encode()
             
             # Store the state-action pair for this player
-            encodings[player_index].append((pre_action_state, player_action))
+            encodings[player_index].append((pre_action_state, action))
             
             # Update the state based on the action
             if player_action == "f":  # Fold
@@ -140,7 +140,7 @@ def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, f
                 state['current_bets'][player_index] += bet_amount
                 state['pot'] += bet_amount
         
-        elif action_type == "d":  # Dealer actions
+        elif action_type == "d":  # Dealer
             dealer_action = parts[1]
             if dealer_action == "dh":  # Dealt Hole Cards
                 player_index = int(parts[2][1]) - 1
