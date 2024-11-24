@@ -621,6 +621,7 @@ class PokerTheoryQAgent(QLearningAgent):
         self.eps_floor = eps_floor
 
     def update_epsilon(self):
+        # TODO: slot this in somewhere
         self.epsilon = max(self.epsilon * self.eps_decay, self.eps_floor)
 
     def rank_state(self, state):
@@ -647,7 +648,7 @@ class PokerTheoryQAgent(QLearningAgent):
         return np.append(state, [rank_preflop, rank])
     
     def get_action_train_and_add_to_buffer(self, state):
-            state = self.rank_state(state) # only change from superclass
+            state = self.rank_state(state) # 1/2 changes from superclass
             if self.prev_state is not None and self.train:
                 self.buffer.add(
                     self.prev_state, self.prev_action, self.balance - self.prev_balance, state)
@@ -658,6 +659,7 @@ class PokerTheoryQAgent(QLearningAgent):
                 else:
                     self.iteration += 1
 
+            self.update_epsilon() # 2/2 changes from superclass
             action = self.q_network.get_action(state, self.epsilon)
 
             self.prev_state = state
