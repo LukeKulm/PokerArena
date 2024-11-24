@@ -4,6 +4,7 @@ from score_hands import best_hand_calc
 from universal_card_functions import rank_to_num, suit_to_num, num_to_rank, num_to_suite
 import numpy as np
 import random
+from ranker import Ranker
 
 
 class Game:
