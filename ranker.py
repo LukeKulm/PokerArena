@@ -11,13 +11,13 @@ class Ranker():
     (Pre-flop hand rankings are indexed to 7,462)
     """
 
-    def __init__(self, parser, hand):
+    def __init__(self, parser): # do I still need hand here
         self.parser = parser
         self.parser.parse()
         self.data = self.parser.table()
         self.preflop = self.parser.get_preflop() # preflop parsed data
-        self.hand = hand
-        self.hand_binary = self.encode_hand(hand)
+        # self.hand = hand
+        # self.hand_binary = self.encode_hand(hand)
         self.flushes = self.flush_table()
         self.unique = self.unique_ranks()
         self.allelse = self.all_else()
@@ -25,25 +25,29 @@ class Ranker():
     def rank(self, hand):
         """
         Get the rank of a hand
-        Pre: hand is already encoded
         Returns int
         """
+        hand_binary = self.encode_hand(hand)
         if len(hand) == 2:
-            return self.preflop_rank()
+            return self.preflop_rank(hand) # NON-ENCODED
         elif len(hand) == 5:
+            print(hand)
+            print(type(hand))
             # TODO: call is_flush
-            index = self.bitwise_value(hand[0]) | self.bitwise_value(hand[1]) | self.bitwise_value(hand[2]) | self.bitwise_value(hand[3]) | self.bitwise_value(hand[4])
-            if self.is_flush(hand):
-                return int(self.flushes[index]) # is this cast legal?
-            elif self.is_unique(hand):
-                return int(self.unique[index])
+            index = self.bitwise_value(hand_binary[0]) | self.bitwise_value(hand_binary[1]) | self.bitwise_value(hand_binary[2]) | self.bitwise_value(hand_binary[3]) | self.bitwise_value(hand_binary[4])
+            if self.is_flush(hand_binary):
+                return int(self.flushes[index][0]) # need to do this [0] crap for deprecation warning
+            elif self.is_unique(hand_binary):
+                return int(self.unique[index][0])
             else:
-                return int((np.where(self.allelse == self.primefactor(hand)))[0])
+                res = np.where(self.allelse == self.primefactor(hand_binary))[0]
+                return int(res[0])
         elif len(hand) > 5 and len(hand) <= 7:
             combos = list(itertools.combinations(hand, 5)) #  every 5-card combination of the 6-or-7-card hand
             backer = []
             for combo in combos:
-                backer.append(self.rank(combo))
+                np_combo = np.array(combo)
+                backer.append(self.rank(np_combo))
             return min(backer) # return the highest rank
         elif len(hand) > 7:
             return -1
@@ -56,6 +60,8 @@ class Ranker():
         V = value (rank) of card one-hot
         S = suit of card one-hot
         P = prime number associated with card rank
+
+        HAND COMES IN AS [[value, suit], [value, suit], ...]
         """
         hand_binary = np.zeros((len(hand),), dtype=int)
         for i in range(len(hand)):
@@ -79,10 +85,11 @@ class Ranker():
         """
         if len(hand) != 2:
             return -1 # maybe find a better error return
+        # hand = self.encode_hand(hand)
         c1_val = self.parser.rankmap(hand[0, 0])
-        c1_suit = self.parser.rankmap(hand[0, 1])
+        c1_suit = hand[0, 1]
         c2_val = self.parser.rankmap(hand[1, 0])
-        c2_suit = self.parser.rankmap(hand[1, 1])
+        c2_suit = hand[1, 1]
         if c1_val == c2_val and c1_suit == c2_suit:
             return -1
 
@@ -191,10 +198,12 @@ class Ranker():
         """
         np.savetxt(filename, self.data, fmt='%d', delimiter=',')    
 
-if __name__ == "__main__":
-    hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
-    start_time = time.time()
-    ranker = Ranker(Parser(), hand)
-    binary = ranker.encode_hand(hand)
-    print(ranker.rank(binary))
-    print("--- %s seconds to rank a hand ---" % (time.time() - start_time))
+# if __name__ == "__main__":
+    # hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
+    # # hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3]])
+    # # hand = np.array([[5,2], [5,1]])
+    # start_time = time.time()
+    # ranker = Ranker(Parser())
+    # rank = ranker.rank(hand)
+    # print(rank)
+    # print("--- %s seconds to rank a hand ---" % (time.time() - start_time))
