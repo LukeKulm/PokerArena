@@ -9,9 +9,10 @@ import math
 from ai_models.q_learning_reinforcement_learning_model import PokerQNetwork, DataBuffer, train_q_network
 import numpy as np
 import improve_dataset
+from action import Action
 
 PLAYER_TYPES = ["Human", "DataAggregator",
-                "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "MonteCarloQLearningHybrid" "SmartBCPlayer"]
+                "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "MonteCarloQLearningHybrid", "SmartBCPlayer"]
 PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS = set(
     ["QLearningAgent", "MonteCarloQLearningHybrid"])
 
@@ -142,21 +143,21 @@ class Human(Player):
                 move = input(
                     "enter f to fold, c to check, r to raise, or e to end the game now: ")
             if move == 'f':
-                return (0, 0,  0)
+                return (Action.FOLD.value, 0,  0)
             elif move == 'c':
-                return (1, 0, 0)
+                return (Action.CALL.value, 0, 0)
             elif move == 'e':
-                return (4, 0, 0)
+                return (Action.END_GAME.value, 0, 0)
             else:
                 amm = 0
                 while int(amm) <= 0 or int(amm) > self.balance:
                     amm = int(input("how much do you want to raise by: "))
 
                 if amm < self.balance:
-                    return (2, amm, 0)
+                    return (Action.RAISE.value, amm, 0)
                 else:
                     self.allin = True
-                    return (2, self.balance, 1)
+                    return (Action.RAISE.value, self.balance, 1)
 
         else:
             move = "x"
@@ -166,24 +167,24 @@ class Human(Player):
                 move = input(
                     "enter f to fold, c to call, r to raise, or e to end the game now: ")
             if move == 'f':
-                return (0, 0,  0)
+                return (Action.FOLD.value, 0,  0)
             elif move == 'c':
                 if bet < self.balance:
-                    return (1, bet, 0)
+                    return (Action.CALL.value, bet, 0)
                 else:
                     self.allin = True
-                    return (1, self.balance, 1)
+                    return (Action.CALL.value, self.balance, 1)
             elif move == 'e':
-                return (4, 0, 0)
+                return (Action.END_GAME.value, 0, 0)
             else:
                 amm = 0
                 while int(amm) <= 0 or int(amm) > self.balance or int(amm) < 2*bet:
                     amm = int(input("how much do you want to raise by: "))
                 if amm < self.balance:
-                    return (2, amm, 0)
+                    return (Action.RAISE.value, amm, 0)
                 else:
                     self.allin = True
-                    return (2, self.balance, 1)
+                    return (Action.RAISE.value, self.balance, 1)
 
 
 class DataAggregator(Player):
@@ -231,23 +232,23 @@ class Random(Player):
         """
         if self.balance <= 0:
             if state[7] == 0:
-                return (0, 0, 0)
+                return (Action.FOLD.value, 0, 0)
             self.allin = True
-            return (1, 0, 1)
+            return (Action.CALL.value, 0, 1)
         bet = state[21]-state[22]
         if bet == 0:
             move = random.choice(['c', 'r'])  # randomly choose check or raise
             if move == 'c':
-                return (1, 0, 0)
+                return (Action.CALL.value, 0, 0)
             else:
                 # randomly select amount below balance
                 """ amm = random.randint(0, self.balance) """
                 amm = (2+np.random.geometric(.5))
                 if amm < self.balance:
-                    return (2, amm, 0)
+                    return (Action.RAISE.value, amm, 0)
                 else:
                     self.allin = True
-                    return (2, self.balance, 1)
+                    return (Action.RAISE.value, self.balance, 1)
 
         else:
 
@@ -255,13 +256,13 @@ class Random(Player):
             move = random.choice(['f', 'c', 'r'])
             if move == 'f':
                 self.folds += 1
-                return (0, 0,  0)
+                return (Action.FOLD.value, 0,  0)
             elif move == 'c':
                 if bet < self.balance:
-                    return (1, bet, 0)
+                    return (Action.CALL.value, bet, 0)
                 else:
                     self.allin = True
-                    return (1, self.balance, 1)
+                    return (Action.CALL.value, self.balance, 1)
             else:
                 # randomly select amount below balance
                 # amm = random.randint(round(bet), self.balance)
@@ -269,10 +270,10 @@ class Random(Player):
                 if amm < bet:
                     amm = bet
                 if amm < self.balance:
-                    return (2, amm, 0)
+                    return (Action.RAISE.value, amm, 0)
                 else:
                     self.allin = True
-                    return (2, self.balance, 1)
+                    return (Action.RAISE.value, self.balance, 1)
 
 
 class QLearningAgent(Player):
@@ -320,16 +321,16 @@ class QLearningAgent(Player):
 
         if double_min_bet >= self.balance:
             self.allin = True
-            return (2, self.balance, 1)
+            return (Action.RAISE.value, self.balance, 1)
 
         this_round_bet = double_min_bet + \
             int(np.floor((self.balance - double_min_bet) * additional_percentage))
 
         if this_round_bet == self.balance:
             self.allin = True
-            return (2, this_round_bet, 1)
+            return (Action.RAISE.value, this_round_bet, 1)
         else:
-            return (2, this_round_bet, 0)
+            return (Action.RAISE.value, this_round_bet, 0)
 
     def get_action_train_and_add_to_buffer(self, state):
         if self.prev_state is not None and self.train:
@@ -356,22 +357,22 @@ class QLearningAgent(Player):
         bet = state[21] - state[22]
         if action == 0:
             # fold
-            return (0, 0, 0)
+            return (Action.FOLD.value, 0, 0)
         if bet >= self.balance:
             # if bet is larger than AI balance, go all in after this point
             self.allin = True
-            return (1, self.balance, 1)
+            return (Action.CALL.value, self.balance, 1)
         if action == 1:
-            return (1, bet, 0)
+            return (Action.CALL.value, bet, 0)
         elif action == 2:
             min_bet = 2
             if bet != 0:
                 min_bet = 2*bet
             if min_bet >= self.balance:
                 self.allin = True
-                return (2, self.balance, 1)
+                return (Action.RAISE.value, self.balance, 1)
             else:
-                return (2, min_bet, 0)
+                return (Action.RAISE.value, min_bet, 0)
         else:
             return self.bet_by_double_min_bet_plus_percentage(
                 bet, self.action_to_additional_percentage[action])
@@ -438,41 +439,41 @@ class MonteCarloAgent(Player):
         if bet == 0:
             if win_rate > 0.98:
                 self.allin = True
-                return (2, self.balance, 1)
+                return (Action.RAISE.value, self.balance, 1)
             elif win_rate < 0.25:
-                return (1, 0, 0)
+                return (Action.CALL.value, 0, 0)
             else:
                 bet_amount = math.floor(win_rate*self.balance/2)
                 if bet_amount == 0:
-                    return (1, 0, 0)
-                return (2, bet_amount, 0)
+                    return (Action.CALL.value, 0, 0)
+                return (Action.RAISE.value, bet_amount, 0)
         else:
             if win_rate > 0.98:
                 self.allin = True
                 if bet >= self.balance:
-                    return (1, self.balance, 1)
+                    return (Action.CALL.value, self.balance, 1)
                 else:
-                    return (2, self.balance, 1)
+                    return (Action.RAISE.value, self.balance, 1)
             if win_rate < 0.25:
-                return (0, 0, 0)
+                return (Action.FOLD.value, 0, 0)
             else:
                 if bet >= self.balance:
                     if win_rate > 0.5:
                         self.allin = True
-                        return (1, self.balance, 1)
+                        return (Action.CALL.value, self.balance, 1)
                     else:
-                        return (0, 0, 0)
+                        return (Action.FOLD.value, 0, 0)
                 else:
                     if win_rate < 0.5:
-                        return (1, bet, 0)
+                        return (Action.CALL.value, bet, 0)
                     else:
                         bet_amount = math.floor(
                             bet + (self.balance - bet) * win_rate * 0.5)
                         if bet_amount <= bet:
-                            return (1, bet, 0)
+                            return (Action.CALL.value, bet, 0)
                         else:
-                            return (2, bet_amount, 0)
-        return (0, 0, 0)
+                            return (Action.RAISE.value, bet_amount, 0)
+        return (Action.FOLD.value, 0, 0)
 
 
 def round_prediction(n):
@@ -528,60 +529,60 @@ class BCPlayer(Player):
         if bet == 0:
             if move == 0:  # model predicts a fold when there is no bet
                 self.calls += 1
-                return (1, 0,  0)
+                return (Action.CALL.value, 0,  0)
             elif move == 1:  # model predicts a check/call
                 self.calls += 1
-                return (1, 0, 0)
+                return (Action.CALL.value, 0, 0)
             elif move == 2:  # model predicts a raise
                 if amount >= 2:  # raise if it's more than a BB
                     if amount >= self.balance:
                         self.raises += 1
                         self.allin = True
-                        return (2, self.balance, 1)
+                        return (Action.RAISE.value, self.balance, 1)
                     else:
                         self.raises += 1
-                        return (2, amount, 0)
+                        return (Action.RAISE.value, amount, 0)
                 else:  # otherwise check
                     self.calls += 1
-                    return (1, 0, 0)
+                    return (Action.CALL.value, 0, 0)
         else:
             if move == 0:
                 self.folds += 1
-                return (0, 0,  0)
+                return (Action.FOLD.value, 0,  0)
             elif move == 1:  # model predicts a call
                 if amount < abs(bet-amount):  # fold
                     self.folds += 1
-                    return (0, 0, 0)
+                    return (Action.FOLD.value, 0, 0)
                 if True:  # call
                     if amount >= self.balance:
                         self.allin = True
                         self.calls += 1
-                        return (1, self.balance, 1)
+                        return (Action.CALL.value, self.balance, 1)
                     else:
                         self.calls += 1
-                        return (1, bet, 0)
+                        return (Action.CALL.value, bet, 0)
             elif move == 2:
                 if amount < abs(bet-amount):  # fold
                     self.folds += 1
-                    return (0, 0, 0)
+                    return (Action.FOLD.value, 0, 0)
                 # and (abs(bet-amount) < abs((bet*2)-amount)):  # call
                 if amount < bet*2:
                     self.calls += 1
                     if bet >= self.balance:
                         self.allin = True
-                        return (1, self.balance, 1)
+                        return (Action.CALL.value, self.balance, 1)
                     else:
-                        return (1, bet, 0)
+                        return (Action.CALL.value, bet, 0)
 
                 else:
                     amount = max(amount, 2*bet)
                     if amount >= self.balance:
                         self.allin = True
                         self.raises += 1
-                        return (2, self.balance, 1)
+                        return (Action.RAISE.value, self.balance, 1)
                     else:
                         self.raises += 1
-                        return (2, amount, 0)
+                        return (Action.RAISE.value, amount, 0)
 
 
 class SmartBCPlayer(BCPlayer):
@@ -606,33 +607,33 @@ class SmartBCPlayer(BCPlayer):
                 if amount >= self.balance:
                     self.raises += 1
                     self.allin = True
-                    return (2, self.balance, 1)
+                    return (Action.RAISE.value, self.balance, 1)
                 else:
                     self.raises += 1
-                    return (2, amount, 0)
+                    return (Action.RAISE.value, amount, 0)
             else:  # otherwise check
                 self.calls += 1
-                return (1, 0, 0)
+                return (Action.CALL.value, 0, 0)
         else:
             if amount < abs(bet-amount):  # fold
                 self.folds += 1
-                return (0, 0, 0)
+                return (Action.FOLD.value, 0, 0)
             if amount < bet*2:  # and (abs(bet-amount) < abs((bet*2)-amount)):  # call
                 self.calls += 1
                 if bet >= self.balance:
                     self.allin = True
-                    return (1, self.balance, 1)
+                    return (Action.CALL.value, self.balance, 1)
                 else:
-                    return (1, bet, 0)
+                    return (Action.CALL.value, bet, 0)
             else:
                 amount = max(amount, 2*bet)
                 if amount >= self.balance:
                     self.allin = True
                     self.raises += 1
-                    return (2, self.balance, 1)
+                    return (Action.RAISE.value, self.balance, 1)
                 else:
                     self.raises += 1
-                    return (2, amount, 0)
+                    return (Action.RAISE.value, amount, 0)
 
 
 class PokerTheoryQAgent(QLearningAgent):
@@ -706,22 +707,22 @@ class PokerTheoryQAgent(QLearningAgent):
         bet = state[21] - state[22]
         if action == 0:
             # fold
-            return (0, 0, 0)
+            return (Action.FOLD.value, 0, 0)
         if bet >= self.balance:
             # if bet is larger than AI balance, go all in after this point
             self.allin = True
-            return (1, self.balance, 1)
+            return (Action.CALL.value, self.balance, 1)
         if action == 1:
-            return (1, bet, 0)
+            return (Action.CALL.value, bet, 0)
         elif action == 2:
             min_bet = 2
             if bet != 0:
                 min_bet = 2*bet
             if min_bet >= self.balance:
                 self.allin = True
-                return (2, self.balance, 1)
+                return (Action.RAISE.value, self.balance, 1)
             else:
-                return (2, min_bet, 0)
+                return (Action.RAISE.value, min_bet, 0)
         else:
             return self.bet_by_double_min_bet_plus_percentage(
                 bet, self.action_to_additional_percentage[action])
