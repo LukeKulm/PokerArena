@@ -17,9 +17,9 @@ def aggregate(encodings):
     #get game from encoding
     #get moves from encoding
     state = encodings
-    actions = extract_moves(state)
-    new_data = torch.tensor(np.array(x1), dtype=torch.float32)
-    new_labels = torch.tensor(np.array(y1), dtype=torch.float32)
+    action = extract_moves(state)
+    new_data = torch.tensor(np.array(state), dtype=torch.float32)
+    new_labels = torch.tensor(np.array(action), dtype=torch.float32)
     if not os.path.exists('data/pluribus_policy.pt'):
         torch.save((new_data, new_labels), 'data/pluribus_policy.pt')
     else:
