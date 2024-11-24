@@ -4,6 +4,22 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import torch
 import numpy as np
 
+# 14 actions total
+# action 0 is fold
+# action 1 is call
+# action 2 is raise by minimum amount
+# action 3 is raise by double minimum amount of remaining_stack
+# action 4 is raise by double minimum amount + 5% of remaining_stack
+# action 5 is raise by double minimum amount + 10% of remaining_stack
+# action 6 is raise by double minimum amount + 15% of remaining_stack
+# action 7 is raise by double minimum amount + 20% of remaining_stack
+# action 8 is raise by double minimum amount + 30% of remaining_stack
+# action 9 is raise by double minimum amount + 40% of remaining_stack
+# action 10 is raise by double minimum amount + 50% of remaining_stack
+# action 11 is raise by double minimum amount + 65% of remaining_stack
+# action 12 is raise by double minimum amount + 80% of remaining_stack
+# action 13 is all in
+
 def extract_moves(state):
   """gets the moves the player made in the game"""
   return 0
