@@ -5,18 +5,18 @@ import torch
 
 class TestDataBuffer:
     def test_does_not_exceed_max_len(self):
-        buffer = model.DataBuffer(maxsize=1)
+        buffer = model.DataBuffer(maxlen=1)
         buffer.add(0, 0, 0, 0)
         buffer.add(1, 1, 1, 1)
         assert len(buffer.buffer) == 1
         assert buffer.buffer[0] == (1, 1, 1, 1)
 
-    def test_sample(self):
-        buffer = model.DataBuffer(maxsize=2)
+    def test_weighted_sample(self):
+        buffer = model.DataBuffer(maxlen=2)
         buffer.add(np.array([0]), 0, 0, np.array([0]))
         buffer.add(np.array([1]), 1, 1, np.array([1]))
         assert len(buffer.buffer) == 2
-        assert len(buffer.sample(1)[0]) == 1
+        assert len(buffer.weighted_sample(1)[0]) == 1
 
 
 class TestPokerQNetwork:
