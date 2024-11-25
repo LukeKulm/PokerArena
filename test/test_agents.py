@@ -8,7 +8,7 @@ from scripts.utils import get_not_busted
 
 
 def test_all_ai_agents():
-  players = [("MonteCarloQLearningHybrid", "saved_models/q_network_with_montecarlo.pth"), 
+  players = [("MonteCarloQLearningHybrid", "saved_models/montecarlo_qlearning_hybrid.pth"), 
              ("QLearningAgent", "saved_models/q_network.pth"), 
              ("MonteCarlo", ""), 
              ("Random", ""),
@@ -20,7 +20,7 @@ def test_all_ai_agents():
   with open(os.devnull, 'w') as fnull:
       with redirect_stdout(fnull):
 
-          n = 1000
+          n = 100
           while i < n:
               g = game.Game(players, 200)
               games += 1

@@ -493,7 +493,7 @@ class BCPlayer(Player):
         self.folded = False
         self.allin = False
         self.model = NN(input_size=23)
-        state_dict = torch.load('bc_checkpoint.pth')
+        state_dict = torch.load('data/bc_checkpoint.pth')
         self.model.load_state_dict(state_dict)
         self.model.eval()
         self.calls = 0
@@ -589,7 +589,7 @@ class SmartBCPlayer(BCPlayer):
     def __init__(self, balance, number_of_opps):
         super().__init__(balance, number_of_opps)
         self.model = NN(input_size=11)
-        state_dict = torch.load('smart_bc_checkpoint.pth')
+        state_dict = torch.load('data/smart_bc_checkpoint.pth')
         self.model.load_state_dict(state_dict)
         self.model.eval()
 
