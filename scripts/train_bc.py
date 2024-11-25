@@ -1,4 +1,4 @@
-from bc import NN
+from ai_models.bc import NN
 import torch
 
 def training_fn(data_name, model_name):

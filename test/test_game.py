@@ -5,8 +5,9 @@ import player
 
 def test_game_step_random_players():
     """Test that game can run many times with random players"""
-    for i in range(1000):
-        g = game.Game(["Random", "Random", "Random"], 200)
+    for _ in range(1000):
+        g = game.Game(
+            [("Random", None), ("Random", None), ("Random", None)], 200)
         g.step()
 
 
@@ -14,8 +15,8 @@ def test_random_vs_montecarlo_players():
     """Test that game can run many times with random vs montecarlo players"""
     montecarlo_winnings = 0
     random_winnings = 0
-    for i in range(100):
-        g = game.Game(["Random", "MonteCarlo"], 200)
+    for _ in range(100):
+        g = game.Game([("Random", None), ("MonteCarlo", None)], 200)
         g.step()
         if g.players[1].balance > g.players[0].balance:
             montecarlo_winnings += (g.players[1].balance - 200)
@@ -28,14 +29,14 @@ def test_random_vs_montecarlo_players():
 @pytest.fixture
 def create_game():
     """Fixture to create a game with 3 players."""
-    players = ["Human", "Random", "Random"]
+    players = [("Human", None), ("Random", None), ("Random", None)]
     return game.Game(players, start=200)
 
 
 @pytest.fixture
 def create_random_game():
     """Fixture to create a game with 3 random players."""
-    players = ["Random", "Random", "Random"]
+    players = [("Random", None), ("Random", None), ("Random", None)]
     return game.Game(players, start=200)
 
 
@@ -75,7 +76,7 @@ def test_determine_winner_no_showdown(create_game):
     game = create_game
     game.folded = [False, True, True]  # Only player 0 remains
     game.pot = 100
-
+    game.over = False
     game.determine_winner(showdown=False)
     assert game.players[0].balance == 200 + 100  # Winner gets the pot
 
@@ -97,7 +98,112 @@ def test_showdown_winner(create_random_game):
     g.community_cards.add_card('2', 's')
 
     g.pot = 300
+    for player in g.players:
+        player.in_hand_for = 100
+    g.over = False
     g.determine_winner(showdown=True)
 
     # Player 0 should win with two pairs (Aces and Kings)
     assert g.players[0].balance == 200 + 300  # Player 0 wins the pot
+
+
+def test_one_side_pot(create_random_game):
+    game = create_random_game
+    game.folder = [False, False, False]
+    game.hands[0].add_card('A', 'c')
+    game.hands[0].add_card('A', 'd')
+    game.hands[1].add_card('K', 'c')
+    game.hands[1].add_card('K', 's')
+    game.hands[2].add_card('Q', 's')
+    game.hands[2].add_card('Q', 'c')
+    game.community_cards.add_card('A', 'h')
+    game.community_cards.add_card('A', 's')
+    game.community_cards.add_card('K', 'd')
+    game.community_cards.add_card('K', 'h')
+    game.community_cards.add_card('Q', 'd')
+
+    for i in range(len(game.players)):
+        if i == 0:
+            game.players[i].in_hand_for = 100
+        else:
+            game.players[i].in_hand_for = 200
+    game.over = False
+    game.determine_winner(showdown=True)
+    assert game.players[0].balance == 500
+    assert game.players[1].balance == 400
+    assert game.players[2].balance == 200
+
+
+def test_multiple_side_pots(create_random_game):
+    game = create_random_game
+    game.folder = [False, False, False]
+    game.hands[0].add_card('A', 'c')
+    game.hands[0].add_card('A', 'd')
+    game.hands[1].add_card('K', 'c')
+    game.hands[1].add_card('K', 's')
+    game.hands[2].add_card('Q', 's')
+    game.hands[2].add_card('Q', 'c')
+    game.community_cards.add_card('A', 'h')
+    game.community_cards.add_card('A', 's')
+    game.community_cards.add_card('K', 'd')
+    game.community_cards.add_card('K', 'h')
+    game.community_cards.add_card('Q', 'd')
+
+    game.players[0].in_hand_for = 100
+    game.players[1].in_hand_for = 200
+    game.players[2].in_hand_for = 300
+    game.over = False
+    game.determine_winner(showdown=True)
+    assert game.players[0].balance == 500
+    assert game.players[1].balance == 400
+    assert game.players[2].balance == 300
+
+
+def test_tie_in_side_pot(create_random_game):
+    game = create_random_game
+    game.folder = [False, False, False]
+    game.hands[0].add_card('A', 'c')
+    game.hands[0].add_card('A', 'd')
+    game.hands[1].add_card('K', 'c')
+    game.hands[1].add_card('K', 's')
+    game.hands[2].add_card('K', 'd')
+    game.hands[2].add_card('K', 'H')
+    game.community_cards.add_card('A', 'h')
+    game.community_cards.add_card('A', 's')
+    game.community_cards.add_card('Q', 's')
+    game.community_cards.add_card('Q', 'c')
+    game.community_cards.add_card('Q', 'd')
+
+    game.players[0].in_hand_for = 100
+    game.players[1].in_hand_for = 200
+    game.players[2].in_hand_for = 200
+    game.over = False
+    game.determine_winner(showdown=True)
+    assert game.players[0].balance == 500
+    assert game.players[1].balance == 300
+    assert game.players[2].balance == 300
+
+
+def test_tie_in_main_pot(create_random_game):
+    game = create_random_game
+    game.folder = [False, False, False]
+    game.hands[0].add_card('2', 'c')
+    game.hands[0].add_card('6', 'd')
+    game.hands[1].add_card('K', 'c')
+    game.hands[1].add_card('K', 's')
+    game.hands[2].add_card('K', 'd')
+    game.hands[2].add_card('K', 'H')
+    game.community_cards.add_card('A', 'h')
+    game.community_cards.add_card('A', 's')
+    game.community_cards.add_card('Q', 's')
+    game.community_cards.add_card('Q', 'c')
+    game.community_cards.add_card('8', 'd')
+
+    game.players[0].in_hand_for = 200
+    game.players[1].in_hand_for = 200
+    game.players[2].in_hand_for = 200
+    game.over = False
+    game.determine_winner(showdown=True)
+    assert game.players[0].balance == 200
+    assert game.players[1].balance == 500
+    assert game.players[2].balance == 500

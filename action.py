@@ -13,3 +13,6 @@ class ActionInformation:
         self.action = action
         self.amount = amount
         self.is_player_all_in = all_in
+
+    def convert_to_tuple(self):
+        return (self.action, self.amount, self.is_player_all_in)

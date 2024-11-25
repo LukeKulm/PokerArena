@@ -4,7 +4,8 @@ import game
 import torch
 import os
 import numpy as np
-from player import PLAYER_TYPES
+from player import PLAYER_TYPES, PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS
+from scripts.utils import get_not_busted
 
 
 class SimulateError(Exception):
@@ -15,18 +16,20 @@ def normal_sim():
     """
     Simulates a game of Texas Hold'em
     """
-    counts = {}
+    lst = []
     for p_type in PLAYER_TYPES:
         num_of_p_type = int(input(f"Enter the number of {p_type} players: "))
         if num_of_p_type > 0:
-            counts[p_type] = num_of_p_type
+            for i in range(num_of_p_type):
+                if p_type in PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS:
+                    model_path = str(
+                        input(f"Enter the model path for {p_type} #{i}:"))
+                    if model_path == "":
+                        model_path = None
+                    lst.append((p_type, model_path))
+                else:
+                    lst.append((p_type, None))
 
-    lst = []
-    for p_type in counts.keys():
-        count = counts[p_type]
-        for _ in range(count):
-            lst.append(p_type)
-    print(lst)
     if len(lst) > 10:
         raise SimulateError(
             f"Too many players: {len(lst)}. Max allowed is 10.")
@@ -35,7 +38,7 @@ def normal_sim():
 
     g = game.Game(lst, 200)
 
-    while get_not_busted(g) > 1 and not g.user_ended:
+    while get_not_busted(g, 0) > 1 and not g.user_ended:
         g.step()
 
 
@@ -44,7 +47,7 @@ def aggregate():
     Simulates a game of Texas Hold'em
     """
     g = game.Game(["DataAggregator", "DataAggregator"], 200)
-    while get_not_busted(g) > 1 and not g.user_ended:
+    while get_not_busted(g, 0) > 1 and not g.user_ended:
         g.step()
     print("The final stacks are: " +
           str(g.players[0].balance)+" "+str(g.players[1].balance))
@@ -63,19 +66,6 @@ def aggregate():
         updated_data = torch.cat((existing_data, new_data), dim=0)
         updated_labels = torch.cat((existing_labels, new_labels), dim=0)
         torch.save((updated_data, updated_labels), 'data/expert_policy.pt')
-
-
-def get_not_busted(g):
-    """
-    Returns the number of players with a nonzero stack
-
-    param g: the Game() object
-    """
-    num_players_not_busted = 0
-    for player in g.players:
-        if player.balance > 0:
-            num_players_not_busted += 1
-    return num_players_not_busted
 
 
 if __name__ == "__main__":

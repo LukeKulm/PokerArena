@@ -66,8 +66,7 @@ class PlayerActionGameState:
             for i in range(10, 18, 2):
                 state[i] = rank_to_num(
                     self.community_cards.get_cards()[i-10])
-                state[i +
-                      1] = suit_to_num(self.community_cards.get_cards()[i-9])
+                state[i + 1] = suit_to_num(self.community_cards.get_cards()[i-9])
             for i in range(18, 20):
                 state[i] = 0
         else:

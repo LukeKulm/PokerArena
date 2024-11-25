@@ -4,6 +4,8 @@ from score_hands import best_hand_calc
 from universal_card_functions import rank_to_num, suit_to_num, num_to_rank, num_to_suite
 import numpy as np
 import random
+from ranker import Ranker
+from parse_hands import Parser
 
 
 class Game:
@@ -12,11 +14,12 @@ class Game:
     """
 
     def __init__(self, players, start=200):
+        self.over = False
         self.allin = False
         self.user_ended = False
         self.num_players = len(players)
         self.players = []
-        for type in players:
+        for (type, model_path) in players:
             if type == "Human":
                 self.players.append(player.Human(start))
             elif type == "DataAggregator":
@@ -31,7 +34,13 @@ class Game:
                     player.BCPlayer(start, len(players)-1))
             elif type == "QLearningAgent":
                 self.players.append(
-                    player.QLearningAgent(start))
+                    player.QLearningAgent(start, model_path))
+            elif type == "PokerTheoryQAgent":
+                self.players.append(
+                    player.PokerTheoryQAgent(start, Ranker(Parser(), ), model_path))
+            elif type == "MonteCarloQLearningHybrid":
+                self.players.append(
+                    player.MonteCarloQLearningHybrid(start, model_path))
             elif type == "SmartBCPlayer":
                 self.players.append(
                     player.SmartBCPlayer(start, len(players)-1))
@@ -197,7 +206,7 @@ class Game:
         Moves the game forward through the stages of a single poker hand
         """
         # Pre-flop: deal hole cards and start betting
-        self.dealer_position+=1
+        self.dealer_position += 1
         for player in self.players:
             player.in_hand_for = 0
             player.allin = False
