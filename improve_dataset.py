@@ -25,8 +25,8 @@ Desciption of new state:
 17 straight
 """
 
-def main():
-    state_dict = torch.load("data/expanded_expert_data.pt")
+def main(initial="data/expanded_expert_data.pt", final='data/improved_expert_data.pt'):
+    state_dict = torch.load(initial)
     data, labels = state_dict
     better_data = torch.empty((0,) +(11,))
     better_labels = torch.empty((0,) + (3,))
@@ -36,7 +36,7 @@ def main():
         better_data = torch.cat((better_data, make_new_state(old).unsqueeze(0)), dim=0)
         better_labels = torch.cat((better_labels, pred.unsqueeze(0)), dim=0)
     
-    torch.save((better_data, better_labels), 'data/improved_expert_data.pt')
+    torch.save((better_data, better_labels), final)
 
 def make_new_state(old):
     state = torch.empty(11)

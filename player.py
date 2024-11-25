@@ -220,6 +220,7 @@ class Random(Player):
         self.balance = balance
         self.folded = False
         self.allin = False
+        self.x = []
 
     def act(self, state):
         """
@@ -227,6 +228,7 @@ class Random(Player):
 
         param state: the state of the game
         """
+        self.x.append(state)
         if self.balance <= 0:
             if state[7] == 0:
                 return (0, 0, 0)
@@ -424,21 +426,21 @@ class MonteCarloAgent(Player):
 def round_prediction(n):
     if n < .5:
         return 0
-    elif n <= 2:
+    elif n <= 1.5:
         return 1
     else:
         return 2
 
 
 class BCPlayer(Player):
-    def __init__(self, balance, number_of_opps):
+    def __init__(self, balance, number_of_opps, model_name='bc_checkpoint.pth'):
         self.in_hand_for = 0
         self.folds = 0
         self.balance = balance
         self.folded = False
         self.allin = False
         self.model = NN(input_size=23)
-        state_dict = torch.load('bc_checkpoint.pth')
+        state_dict = torch.load(model_name)
         self.model.load_state_dict(state_dict)
         self.model.eval()
         self.calls = 0
