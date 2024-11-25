@@ -30,6 +30,16 @@ class TestPokerQNetwork:
         assert prediction >= 0
         assert prediction <= 9
 
+    def test_select_action_softmax_activated(self):
+        network = model.PokerQNetwork(8, 10, softmax=True)
+        state = np.random.rand(8)
+        epsilon = 0.01
+
+        prediction = network.select_action(state, epsilon)
+        assert isinstance(prediction, int)
+        assert prediction >= 0
+        assert prediction <= 9
+
     def test_forward(self):
         network = model.PokerQNetwork(8, 10)
         state = torch.rand(8)
