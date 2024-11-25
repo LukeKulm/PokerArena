@@ -31,8 +31,6 @@ class Ranker():
         if len(hand) == 2:
             return self.preflop_rank(hand) # NON-ENCODED
         elif len(hand) == 5:
-            print(hand)
-            print(type(hand))
             # TODO: call is_flush
             index = self.bitwise_value(hand_binary[0]) | self.bitwise_value(hand_binary[1]) | self.bitwise_value(hand_binary[2]) | self.bitwise_value(hand_binary[3]) | self.bitwise_value(hand_binary[4])
             if self.is_flush(hand_binary):
@@ -41,7 +39,7 @@ class Ranker():
                 return int(self.unique[index][0])
             else:
                 res = np.where(self.allelse == self.primefactor(hand_binary))[0]
-                return int(res[0])
+                return int(res)
         elif len(hand) > 5 and len(hand) <= 7:
             combos = list(itertools.combinations(hand, 5)) #  every 5-card combination of the 6-or-7-card hand
             backer = []
@@ -199,11 +197,11 @@ class Ranker():
         np.savetxt(filename, self.data, fmt='%d', delimiter=',')    
 
 # if __name__ == "__main__":
-    # hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
-    # # hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3]])
-    # # hand = np.array([[5,2], [5,1]])
-    # start_time = time.time()
-    # ranker = Ranker(Parser())
-    # rank = ranker.rank(hand)
-    # print(rank)
-    # print("--- %s seconds to rank a hand ---" % (time.time() - start_time))
+#     hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
+#     # hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3]])
+#     # hand = np.array([[5,2], [5,1]])
+#     start_time = time.time()
+#     ranker = Ranker(Parser())
+#     rank = ranker.rank(hand)
+#     print(rank)
+#     print("--- %s seconds to rank a hand ---" % (time.time() - start_time))

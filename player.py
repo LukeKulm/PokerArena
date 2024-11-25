@@ -642,7 +642,7 @@ class PokerTheoryQAgent(QLearningAgent):
         super().__init__(balance=balance, model_path=None, epsilon=epsilon, train=train,
                          learn_frequency=learn_frequency, batch_size=batch_size)
         self.q_network = PokerQNetwork(
-            state_space_size=25, action_space_size=14)
+            state_space_size=27, action_space_size=14) # POTENTIAL B_UG IN STATE SPACE NOW
         if model_path:
             self.q_network.load_state_dict(torch.load(model_path))
 
@@ -670,20 +670,14 @@ class PokerTheoryQAgent(QLearningAgent):
         elif stage == 1:
             # rank 5-card hand
             board = np.array([hole_card_1, hole_card_2, state[10:12], state[12:14], state[14:16]])
-            print('5-card board')
-            print(board)
             rank = self.ranker.rank(board) # 5-card board
         elif stage == 2:
             # rank 6-card hand
             board = np.array([hole_card_1, hole_card_2, state[10:12], state[12:14], state[14:16], state[16:18]])
-            print('6-card board')
-            print(board)
             rank = self.ranker.rank(board) # 6-card board
         else:
             # rank 7-card hand
             board = np.array([hole_card_1, hole_card_2, state[10:12], state[12:14], state[14:16], state[16:18], state[18:20]])
-            print('7-card board')
-            print(board)
             rank = self.ranker.rank(board) # 7-card board
         return np.append(state, [rank_preflop, rank]) # check if this correct
 
