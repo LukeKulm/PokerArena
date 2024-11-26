@@ -3,6 +3,8 @@ import itertools
 import time
 from parse_hands import Parser
 from universal_card_functions import rank_to_prime, primify
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class Ranker():
     """
@@ -196,12 +198,36 @@ class Ranker():
         """
         np.savetxt(filename, self.data, fmt='%d', delimiter=',')    
 
-# if __name__ == "__main__":
-#     hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3], [7, 3]])
-#     # hand = np.array([[12, 3], [11, 3], [10, 3], [9, 3], [8, 3]])
-#     # hand = np.array([[5,2], [5,1]])
-#     start_time = time.time()
-#     ranker = Ranker(Parser())
-#     rank = ranker.rank(hand)
-#     print(rank)
-#     print("--- %s seconds to rank a hand ---" % (time.time() - start_time))
+if __name__ == "__main__":
+
+    ranker = Ranker(Parser())
+    print('\n\nDemoing preflop hand ranking.')
+    start_time = time.time()
+    hand_1 = np.array([[12, 3], [12, 2]])
+    print('Preflop hand is: ' + str(hand_1))
+    print('Rank is: ' + str(ranker.preflop_rank(hand_1)) + ' out of 169.')
+    print("--- %s seconds to rank a preflop hand ---" % (time.time() - start_time))
+    input("Press Enter to continue...\n")
+
+    print('Demoing postflop hand ranking.')
+    start_time = time.time()
+    hand_2 = np.array([[12, 3], [12, 2], [10, 3], [10, 2], [8, 3]])
+    print('Postflop hand is: ' + str(hand_2))
+    print('Postflop rank is: ' + str(ranker.rank(hand_2)) + ' out of 7462.')
+    print("--- %s seconds to rank a postflop hand ---" % (time.time() - start_time))
+    input("Press Enter to continue...\n")
+
+    print('Demoing hand ranking with the turn card.')
+    start_time = time.time()
+    hand_3 = np.array([[12, 3], [12, 2], [10, 3], [10, 2], [8, 3], [10, 1]])
+    print('Hand with turn card is: ' + str(hand_3))
+    print('Rank is: ' + str(ranker.rank(hand_3)) + ' out of 7462.')
+    print("--- %s seconds to rank a hand that has reached the turn ---" % (time.time() - start_time))
+    input("Press Enter to continue...\n")
+
+    print('Demoing hand ranking with the river card.')
+    start_time = time.time()
+    hand_4 = np.array([[12, 3], [12, 2], [10, 3], [10, 2], [8, 3], [10, 1], [10, 0]])
+    print('Hand with turn card is: ' + str(hand_4))
+    print('Rank is: ' + str(ranker.rank(hand_4)) + ' out of 7462.')
+    print("--- %s seconds to rank a hand that has reached the river ---" % (time.time() - start_time))  
