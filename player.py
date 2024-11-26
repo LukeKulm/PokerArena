@@ -10,6 +10,10 @@ from ai_models.q_learning_reinforcement_learning_model import PokerQNetwork, Dat
 import numpy as np
 import improve_dataset
 from action import Action
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 
 PLAYER_TYPES = ["Human", "DataAggregator",
                 "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "MonteCarloQLearningHybrid", "PokerTheoryQAgent", "SmartBCPlayer"]
@@ -488,13 +492,13 @@ def round_prediction(n):
 
 
 class BCPlayer(Player):
-    def __init__(self, balance, number_of_opps, model_name='bc_checkpoint.pth'):
+    def __init__(self, balance, number_of_opps, model_name='bc_checkpoint.pth', size = 23):
         self.in_hand_for = 0
         self.folds = 0
         self.balance = balance
         self.folded = False
         self.allin = False
-        self.model = NN(input_size=23)
+        self.model = NN(input_size=size)
         state_dict = torch.load(model_name)
         self.model.load_state_dict(state_dict)
         self.model.eval()
@@ -589,9 +593,9 @@ class BCPlayer(Player):
 
 class SmartBCPlayer(BCPlayer):
     def __init__(self, balance, number_of_opps):
-        super().__init__(balance, number_of_opps)
+        super().__init__(balance, number_of_opps, 'ai_models/smart_bc_checkpoint.pth', size = 11)
         self.model = NN(input_size=11)
-        state_dict = torch.load('data/smart_bc_checkpoint.pth')
+        state_dict = torch.load('ai_models/smart_bc_checkpoint.pth')
         self.model.load_state_dict(state_dict)
         self.model.eval()
 
