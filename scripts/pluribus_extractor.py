@@ -11,6 +11,84 @@ history_dir = 'data/pluribus_unextracted/30'
 
 files = [os.path.join(history_dir, f) for f in os.listdir(history_dir) if f.endswith('.phh')]
 
+def extract_action(action, min_bet, curr_stack_size):
+    """
+    Extracts and returns the action as an integer based on a given action string.
+
+    Returns:
+        int: The extracted integer action (0-13).
+    """
+    # 14 actions total
+    # action 0 is fold
+    # action 1 is call
+    # action 2 is raise by minimum amount
+    # action 3 is raise by double minimum amount
+    # action 4 is raise by double minimum amount + 5% of remaining_stack
+    # action 5 is raise by double minimum amount + 10% of remaining_stack
+    # action 6 is raise by double minimum amount + 15% of remaining_stack
+    # action 7 is raise by double minimum amount + 20% of remaining_stack
+    # action 8 is raise by double minimum amount + 30% of remaining_stack
+    # action 9 is raise by double minimum amount + 40% of remaining_stack
+    # action 10 is raise by double minimum amount + 50% of remaining_stack
+    # action 11 is raise by double minimum amount + 65% of remaining_stack
+    # action 12 is raise by double minimum amount + 80% of remaining_stack
+    # action 13 is all in
+    
+    #make sure to remove parts of the string that are left
+    action = action[1:-1]
+
+    # Remove unnecessary parts of the input string 
+    action_parts = action.split()
+    
+    # fold
+    if 'f' in action_parts:
+        return 0
+    
+    # call
+    if 'cc' in action_parts or 'c' in action_parts:
+        return 1
+    
+    # Check for raise actions
+    if 'cbr' in action_parts:
+        try:
+            raise_amount = int(action_parts[-1])  # last part is the raise
+        except ValueError:
+            raise ValueError(f"Invalid raise amount in action string: {action}")
+        
+        #not sure if this calculatio works but seems to
+        remaining_stack = curr_stack_size - min_bet
+        raise_options = [
+            min_bet, #Action 2: min bet
+            2 * min_bet,  # Action 3: double minimum raise
+            2 * min_bet + 0.05 * remaining_stack,  # Action 4
+            2 * min_bet + 0.10 * remaining_stack,  # Action 5
+            2 * min_bet + 0.15 * remaining_stack,  # Action 6
+            2 * min_bet + 0.20 * remaining_stack,  # Action 7
+            2 * min_bet + 0.30 * remaining_stack,  # Action 8
+            2 * min_bet + 0.40 * remaining_stack,  # Action 9
+            2 * min_bet + 0.50 * remaining_stack,  # Action 10
+            2 * min_bet + 0.65 * remaining_stack,  # Action 11
+            2 * min_bet + 0.80 * remaining_stack,  # Action 12
+            remaining_stack #Action 13
+        ]
+        
+        # Find the closest matching action
+        min_collector = 10000
+        return_int = 2
+        #find which one is closest
+        for i, threshold in enumerate(raise_options, start=2):
+            if abs(raise_amount - threshold) < min_collector:
+                min_collector = abs(raise_amount - threshold)
+                return_int = i
+        return return_int
+    
+    #TODO figure out if show muck should return anything but I dont think this hurts
+    if 'sm' in action_parts:
+        return 1
+
+    raise ValueError(f"Unknown action type in action string: {action}")
+
+
 # Parsing actions with robust handling
 def parse_hole_cards(action):
     parts = [p.strip("'\" ") for p in action.split()]  # Normalize split parts
@@ -80,7 +158,7 @@ def determine_dealer_position(actions, num_players):
             return (first_actor_index - 1) % num_players  # Dealer is the player before
 
 # Function to encode hand history
-def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, finishing_stacks):
+def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, finishing_stacks, starting_stacks):
     num_players = len(players)
     state = {
         'num_players': num_players,
@@ -116,7 +194,8 @@ def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, f
                 num_players_folded=sum(state['folded']),
                 player_index=player_index,
                 player_cards=state['hole_cards'][player_index],
-                player_balance=finishing_stacks[player_index],
+                #TODO This should be the starting stack - amount in for right not finishing stack?
+                player_balance=starting_stacks[player_index] - state['current_bets'][player_index],
                 dealer_position=dealer_position,
                 stage=determine_stage(state['community_cards']),
                 pot=state['pot'],
@@ -126,7 +205,11 @@ def encode_hand_history(antes, blinds_or_straddles, min_bet, actions, players, f
             ).encode()
             
             # Store the state-action pair for this player
-            encodings[player_index].append((pre_action_state, action))
+            #TODO implement extract action:
+            curr_stack_size = starting_stacks[player_index] - state['current_bets'][player_index]
+            min_amount_bet = min_bet
+            extracted_action = extract_action(action, min_amount_bet, curr_stack_size)
+            encodings[player_index].append((pre_action_state, extracted_action))
             
             # Update the state based on the action
             if player_action == "f":  # Fold
@@ -172,6 +255,8 @@ def parse_hand_history(lines):
             parsed_data[key] = list(map(int, value.strip('[]').split(', ')))
         elif key == "players":
             parsed_data[key] = value.strip('[]').split(', ')
+        elif key == "starting_stacks":
+            parsed_data[key] = value.strip('[]').split(', ')
         elif key == "variant":
             parsed_data[key] = value.strip("'")
         elif key == "ante_trimming_status":
@@ -190,7 +275,8 @@ for file in files:
         hand_data['min_bet'],
         hand_data['actions'],
         hand_data['players'],
-        hand_data['finishing_stacks']
+        hand_data['finishing_stacks'],
+        hand_data['starting_stacks']
     )
     
     # Write the encodings to a json file
