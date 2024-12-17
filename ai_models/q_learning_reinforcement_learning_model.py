@@ -4,6 +4,7 @@ import torch.optim as optim
 from collections import deque, namedtuple
 import random
 import numpy as np
+from torch.utils.data import DataLoader
 
 # NOTE
 # Code inspired by a CS 4789 project and also:
@@ -14,15 +15,16 @@ class QLearningException(Exception):
     pass
 
 class ExpertDataset(torch.utils.data.Dataset):
-    def __init__(self, data):
-        self.states = states
-        self.actions = actions
+    def __init__(self, expert_data_path):
+        self.states, self.actions = torch.load(expert_data_path)
 
     def __len__(self):
-        return len(self.states)
+        return self.states.shape[0]
 
     def __getitem__(self, idx):
-        return torch.tensor(self.states[idx]).float(), torch.tensor(self.actions[idx])
+        state = self.states[idx]
+        action = self.actions[idx]
+        return state, action
 
 class DataBuffer(object):
     def __init__(self, maxlen=500):
@@ -129,10 +131,9 @@ def train_q_network(q_network: PokerQNetwork, buffer: DataBuffer, batch_size=100
         optimizer.step()
         optimizer.zero_grad()
     
-def supervised_finetune(q_network, expert_data, epochs=10, batch_size=100, learning_rate=1e-3):
-    #TODO: need to extract actions and need to turn actions into 1 of 14 actions
-    dataset = ExpertDataset(expert_data)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+def supervised_finetune(q_network, expert_data_path, epochs=10, batch_size=100, learning_rate=1e-3, save_path="saved_models/q_network_finetuned.pth"):
+    dataset = ExpertDataset(expert_data_path)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     
     loss_fn = nn.CrossEntropyLoss() #TODO, probably change this since want bet amount to be included as part of loss, but also could just focus on action and not bet amount
     optimizer = optim.Adam(q_network.parameters(), lr=learning_rate)
@@ -149,4 +150,8 @@ def supervised_finetune(q_network, expert_data, epochs=10, batch_size=100, learn
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            avg_loss = total_loss / len(dataloader)
+            print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
+            
+        torch.save(q_network.state_dict(), save_path)
     
