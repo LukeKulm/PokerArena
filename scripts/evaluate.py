@@ -4,67 +4,80 @@ import os
 
 from contextlib import redirect_stdout
 import matplotlib.pyplot as plt
+from scripts.utils import get_not_busted
+import argparse
+import player
 
 
-def main():
+def main(advanced_tracking: bool):
     """
     Simulates a game of Texas Hold'em
     """
-    mc_folds = 0
-    rand_folds = 0
+    players = [("QLearningAgent",
+                "saved_models/q_learning_agent.pth"),
+                ("MonteCarloQLearningHybrid", "saved_models/montecarlo_q_hybrid.pth"), 
+                ("PokerTheoryQAgent",
+                "saved_models/poker_theory_model.pth"),
+                ("MonteCarlo", None),
+                ("Random", None)]
+    
     i = 0
-    mc_balance = [0]
-    random_balance = [0]
-    mc_in = 0
-    rand_in = 0
-    mc_sum = 0
-    rand_sum = 0
+    balances = [[] for _ in players]
+    sums = [0]*len(players)
+    game_balances = [0]*len(players)
+    games = 0
+    if advanced_tracking:
+        wrappers = [player.ActionTracker() for _ in players]
 
-    # with open(os.devnull, 'w') as fnull:
-    #     with redirect_stdout(fnull):
-    while i<1000:
-        g = game.Game(["BCPlayer", "Random"], 200)
-        mc_in+=1
-        rand_in+=1
-        while i<1000 and  get_not_busted(g) > 1 and not g.user_ended:
-            print(f"We have simulated {i} hands")
-            g.step()
-            i+=1
-            mc_balance.append(g.players[0].balance-(mc_in*200)+mc_sum)
-            random_balance.append(g.players[1].balance-(rand_in*200)+rand_sum)
-            mc_game = g.players[0].balance
-            rand_game = g.players[1].balance
-        mc_folds+=g.players[0].folds
-        rand_folds+=g.players[1].folds
-        mc_sum+=mc_game
-        rand_sum+=rand_game
-    print(f"BC folded {mc_folds} of the hands!")
-    print(f"Random folded {rand_folds} of the hands!")
-    print(mc_balance[-1])
-    print(random_balance[-1])
-    plt.plot(range(len(mc_balance)), mc_balance, color='blue')
-    plt.plot(range(len(random_balance)), random_balance, color='red')
-    plt.title('Monte Carlo vs Random')            
-    plt.xlabel('# of hands')            
-    plt.ylabel('Net Gain')            
+    with open(os.devnull, 'w') as fnull:
+        with redirect_stdout(fnull):
+
+            n = 500
+            while i < n:
+                g = game.Game(players, 200)
+
+                if advanced_tracking:
+                    for wrapper, new_player in zip(wrappers, g.players):
+                        wrapper.underlying_agent = new_player
+                    g.players = wrappers
+
+                games += 1
+                while i < n and get_not_busted(g, 2) == len(players) and not g.user_ended:
+                    print(f"We have simulated {i} hands")
+                    g.step()
+                    i += 1
+                    for j in range(len(players)):
+                        balances[j].append(
+                            g.players[j].balance-(games*200)+sums[j])
+                        game_balances[j] = g.players[j].balance
+                for j in range(len(players)):
+                    sums[j] += game_balances[j]
+
+    if advanced_tracking:
+        for i in range(len(wrappers)):
+            print(f"____________player{i} statistics ({players[i][0]})_____________")
+            wrappers[i].print_compiled_actions()
+
+
+
+    colors = ["blue", "red", "green", "yellow", "black"]
+    for j in range(len(players)):
+        plt.plot(range(len(balances[j])), balances[j], color=colors[j])
+    title = ""
+    for j in range(len(players)):
+        title += players[j][0]+" ("+colors[j]+"), "
+    plt.title(f'{title}over {n} hands which took {games} games')
+    plt.xlabel('# of hands')
+    plt.ylabel('Net Gain')
 
     plt.savefig("my_plot.png")
 
     plt.show()
-    
-
-def get_not_busted(g):
-    """
-    Returns the number of players with a nonzero stack
-
-    param g: the Game() object
-    """
-    num_players_not_busted = 0
-    for player in g.players:
-        if player.balance >2:
-            num_players_not_busted += 1
-    return num_players_not_busted
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Save Pytorch Model Parser")
+    parser.add_argument("--advanced_tracking", action="store_true",
+                        help="If active, saves the model to specified location")
+    args = parser.parse_args()
+    main(args.advanced_tracking)
