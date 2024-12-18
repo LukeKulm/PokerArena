@@ -190,7 +190,7 @@ def calculate_results(
     # pt_move = pt.act(state)
 
     st.write("Smart BC Player predicts a ", prediction_to_string(smart_bc_move))
-    st.write("BC Player predicts a ", prediction_to_string(bc_move))
+    # st.write("BC Player predicts a ", prediction_to_string(bc_move))
     st.write("Q Learning Agent predicts a ", prediction_to_string(ql_move))
     st.write("Monte Carlo Agent predicts a ", prediction_to_string(mc_move))
     st.write("MonteCarlo/Q Learning hybrid predicts a ", prediction_to_string(hybrid_move))

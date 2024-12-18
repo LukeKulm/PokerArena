@@ -48,11 +48,11 @@ def get_suit(num):
     param num: the number of the suit
     """
     if num == 0:
-        return "Hearts"
+        return "Clubs"
     elif num == 1:
         return "Diamonds"
     elif num == 2:
-        return "Clubs"
+        return "Hearts"
     else:
         return "Spades"
 
