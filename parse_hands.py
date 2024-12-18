@@ -1,7 +1,13 @@
 import numpy as np
+import os
 
-HAND_DATA_PATH = ".\data\hand_equiv_classes\hands"
-PREFLOP_DATA_PATH = ".\data\hand_equiv_classes\preflop"
+curr_dirr = os.path.dirname(os.path.abspath(__file__))
+
+# HAND_DATA_PATH = ".\data\hand_equiv_classes\hands"
+HAND_DATA_PATH = os.path.abspath(os.path.join(curr_dirr, '..', 'JK_LCMJ_ctb93_jcs547_lbk73_mmw243', 'data', 'hand_equiv_classes', 'hands'))
+
+# PREFLOP_DATA_PATH = ".\data\hand_equiv_classes\preflop"
+PREFLOP_DATA_PATH = os.path.abspath(os.path.join(curr_dirr, '..', 'JK_LCMJ_ctb93_jcs547_lbk73_mmw243', 'data', 'hand_equiv_classes', 'preflop'))
 RANK_MAP = {'A': 0b0001000000000000,
             '14':0b0001000000000000, 
             'K': 0b0000100000000000,
