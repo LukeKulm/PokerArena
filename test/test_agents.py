@@ -8,8 +8,8 @@ from scripts.utils import get_not_busted
 
 
 def test_all_ai_agents():
-  players = [("MonteCarloQLearningHybrid", "saved_models/montecarlo_qlearning_hybrid.pth"), 
-             ("QLearningAgent", "saved_models/q_network.pth"), 
+  players = [("MonteCarloQLearningHybrid", "saved_models/montecarlo_q_hybrid.pth"), 
+             ("QLearningAgent", "saved_models/q_learning_agent.pth"), 
              ("MonteCarlo", ""), 
              ("Random", ""),
              ("BCPlayer", ""),
