@@ -1,14 +1,11 @@
 import sys
 import game
 import os
-
 from contextlib import redirect_stdout
 import matplotlib.pyplot as plt
 from scripts.utils import get_not_busted
 import argparse
 import player
-
-
 def main(advanced_tracking: bool):
     """
     Simulates a game of Texas Hold'em
@@ -20,7 +17,7 @@ def main(advanced_tracking: bool):
                 "saved_models/poker_theory_model.pth"),
                 ("MonteCarlo", None),
                 ("Random", None)]
-    
+
     i = 0
     balances = [[] for _ in players]
     sums = [0]*len(players)
@@ -28,11 +25,9 @@ def main(advanced_tracking: bool):
     games = 0
     if advanced_tracking:
         wrappers = [player.ActionTracker() for _ in players]
-
     with open(os.devnull, 'w') as fnull:
         with redirect_stdout(fnull):
-
-            n = 500
+            n = 10
             while i < n:
                 g = game.Game(players, 200)
 
@@ -40,7 +35,6 @@ def main(advanced_tracking: bool):
                     for wrapper, new_player in zip(wrappers, g.players):
                         wrapper.underlying_agent = new_player
                     g.players = wrappers
-
                 games += 1
                 while i < n and get_not_busted(g, 2) == len(players) and not g.user_ended:
                     print(f"We have simulated {i} hands")
@@ -52,14 +46,10 @@ def main(advanced_tracking: bool):
                         game_balances[j] = g.players[j].balance
                 for j in range(len(players)):
                     sums[j] += game_balances[j]
-
     if advanced_tracking:
         for i in range(len(wrappers)):
             print(f"____________player{i} statistics ({players[i][0]})_____________")
             wrappers[i].print_compiled_actions()
-
-
-
     colors = ["blue", "red", "green", "yellow", "black"]
     for j in range(len(players)):
         plt.plot(range(len(balances[j])), balances[j], color=colors[j])
@@ -69,9 +59,7 @@ def main(advanced_tracking: bool):
     plt.title(f'{title}over {n} hands which took {games} games')
     plt.xlabel('# of hands')
     plt.ylabel('Net Gain')
-
     plt.savefig("my_plot.png")
-
     plt.show()
 
 
