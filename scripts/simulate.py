@@ -4,7 +4,7 @@ import game
 import torch
 import os
 import numpy as np
-from player import PLAYER_TYPES, PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS
+from player import PLAYER_TYPES, PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS, PLAYER_TYPE_TO_TORCH_PATH
 from scripts.utils import get_not_busted
 
 
@@ -25,7 +25,10 @@ def normal_sim():
                     model_path = str(
                         input(f"Enter the model path for {p_type} #{i}:"))
                     if model_path == "":
-                        model_path = None
+                        if p_type in PLAYER_TYPE_TO_TORCH_PATH:
+                            model_path = PLAYER_TYPE_TO_TORCH_PATH[p_type]
+                        else:
+                            model_path = None
                     lst.append((p_type, model_path))
                 else:
                     lst.append((p_type, None))

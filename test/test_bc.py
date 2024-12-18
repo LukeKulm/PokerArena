@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Add the parent directory to sys.path
+parent_dir = os.path.abspath("..")
+sys.path.insert(0, parent_dir)
+sys.path.insert(0, "scripts")
+
 import pytest 
 import game
 import torch
@@ -9,12 +17,12 @@ from player import BCPlayer, round_prediction
 
 # uses random players to generate a set of 1000 random game states, labels them all with a fold, then trains a model on this policy and verifies that it always folds
 def test_always_calls():
-    players = ["Random", "Random"]
+    players = ([("Random", None), ("Random", None)])
     n = 1000
     i=0
     while i<n:
         g = game.Game(players, 200)
-        while i<n and  get_not_busted(g) == len(players) and not g.user_ended:
+        while i<n and  get_not_busted(g, 2) == len(players) and not g.user_ended:
             print(f"We have simulated {i} hands")
             g.step()
             i = len(g.players[0].x) + len(g.players[1].x)
@@ -43,12 +51,12 @@ def test_always_calls():
         assert 1 == round_prediction(move)
 
 def test_always_folds():
-    players = ["Random", "Random"]
+    players = ([("Random", None), ("Random", None)])
     n = 1000
     i=0
     while i<n:
         g = game.Game(players, 200)
-        while i<n and  get_not_busted(g) == len(players) and not g.user_ended:
+        while i<n and  get_not_busted(g, 2) == len(players) and not g.user_ended:
             print(f"We have simulated {i} hands")
             g.step()
             i = len(g.players[0].x) + len(g.players[1].x)
@@ -76,12 +84,12 @@ def test_always_folds():
         assert 0 == round_prediction(move)
         
 def test_always_raises():
-    players = ["Random", "Random"]
+    players = ([("Random", None), ("Random", None)])
     n = 1000
     i=0
     while i<n:
         g = game.Game(players, 200)
-        while i<n and  get_not_busted(g) == len(players) and not g.user_ended:
+        while i<n and  get_not_busted(g, 2) == len(players) and not g.user_ended:
             print(f"We have simulated {i} hands")
             g.step()
             i = len(g.players[0].x) + len(g.players[1].x)

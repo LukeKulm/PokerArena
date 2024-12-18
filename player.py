@@ -19,6 +19,9 @@ PLAYER_TYPES = ["Human", "DataAggregator",
                 "Random", "MonteCarlo", "BCPlayer", "QLearningAgent", "MonteCarloQLearningHybrid", "PokerTheoryQAgent", "SmartBCPlayer"]
 PLAYER_TYPES_THAT_REQUIRE_TORCH_MODELS = set(
     ["QLearningAgent", "PokerTheoryQAgent", "MonteCarloQLearningHybrid"])
+PLAYER_TYPE_TO_TORCH_PATH = {"QLearningAgent": "saved_models/q_learning_agent.pth",
+                             "MonteCarloQLearningHybrid": "saved_models/montecarlo_q_hybrid.pth",
+                             "PokerTheoryQAgent": "saved_models/poker_theory_model.pth"}
 
 
 class Player(ABC):
@@ -671,7 +674,6 @@ class SmartBCPlayer(BCPlayer):
         move = prediction[0]
         amount = prediction[1].item()
         jam = prediction[2]
-        print(move)
         if bet == 0:
             if amount >= 2:  # raise if it's more than a BB
                 if amount >= self.balance:
