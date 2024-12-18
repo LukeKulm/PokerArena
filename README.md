@@ -1,5 +1,5 @@
 # JK_LCMJ_ctb93_jcs547_lbk73_mmw243
-This project, Poker AI Showdown, is our attempt at training AI Agents to play Texas Hold'em poker \
+This project, Poker AI Showdown, is our attempt at training AI Agents to play Texas Hold'em poker
 
 Final Demo Script:
 
@@ -20,5 +20,3 @@ Cole will demonstrate the following:
 poker bots against each non-AI agents, but also against each other. It will be run
 for 10 iterations, with a QLearningAgent, a MonteCarloQLearningHybrid, a PokerTheoryQAgent (all AI bots),
 and a MonteCarlo and Random bot (not AI). The command is: python -m scripts.evaluate.
-
-\ 
