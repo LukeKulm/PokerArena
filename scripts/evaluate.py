@@ -16,8 +16,8 @@ def main(advanced_tracking: bool):
     players = [("QLearningAgent",
                 "saved_models/q_learning_agent.pth"),
                 ("MonteCarloQLearningHybrid", "saved_models/montecarlo_q_hybrid.pth"), 
-                ("QLearningAgent",
-                "saved_models/q_network.pth"),
+                # ("QLearningAgent",
+                # "saved_models/q_network.pth"),
                 ("Random", None),
                 ("Random", None)]
     
