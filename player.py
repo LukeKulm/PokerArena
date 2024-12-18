@@ -347,7 +347,7 @@ class Random(Player):
 
 
 class QLearningAgent(Player):
-    def __init__(self, balance, model_path=None, epsilon=0.01, train=False, learn_frequency=1, batch_size=50):
+    def __init__(self, balance, model_path=None, epsilon=0.02, train=False, learn_frequency=1, batch_size=50):
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -454,7 +454,7 @@ class QLearningAgent(Player):
 
 
 class MonteCarloQLearningHybrid(QLearningAgent):
-    def __init__(self, balance, model_path=None, epsilon=0.01, train=False, learn_frequency=1, batch_size=50):
+    def __init__(self, balance, model_path=None, epsilon=0.02, train=False, learn_frequency=1, batch_size=50):
         super().__init__(balance=balance, model_path=None, epsilon=epsilon, train=train,
                          learn_frequency=learn_frequency, batch_size=batch_size)
         self.q_network = PokerQNetwork(
