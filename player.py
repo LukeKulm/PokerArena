@@ -104,6 +104,70 @@ def decode_stage(num):
     else:
         return "River"
 
+class ActionTracker(Player):
+    def __init__(self, underlying_agent = None):
+        self.underlying_agent = underlying_agent
+        self.actions = []
+    
+    def act(self, state):
+        action = self.underlying_agent.act(state)
+        self.actions.append(action)
+        return action
+
+    @property
+    def balance(self):
+        return self.underlying_agent.balance
+    
+    @property
+    def folded(self):
+        return self.underlying_agent.folded
+    
+    @balance.setter
+    def balance(self, value):
+        # Setter for balance
+        self.underlying_agent.balance = value
+
+    def compile_actions(self):
+        total_actions = 0
+
+        fold_count = 0 #0
+        call_count = 0 #1
+        raise_count = 0 #2
+
+        all_in_count = 0
+        total_bet_amount = 0
+
+        for action, amount, all_in in self.actions:
+            total_actions += 1
+
+            if action == 0:
+                fold_count += 1
+            elif action == 1:
+                call_count += 1
+            elif action == 2:
+                raise_count += 1
+            
+            if all_in:
+                all_in_count += 1
+            
+            total_bet_amount += amount
+        
+        average_bet_amount = total_bet_amount / total_actions
+        fold_rate = fold_count / total_actions
+        call_rate = call_count / total_actions
+        raise_rate = raise_count / total_actions
+        all_in_rate = all_in_count / total_actions
+
+        return average_bet_amount, fold_rate, call_rate, raise_rate, all_in_rate
+
+    def print_compiled_actions(self):
+        average_bet_amount, fold_rate, call_rate, raise_rate, all_in_rate = self.compile_actions()
+        print("average_bet_amount: ", average_bet_amount)
+        print("fold_rate: ", fold_rate)
+        print("call_rate: ", call_rate)
+        print("raise_rate: ", raise_rate)
+        print("all_in_rate: ", all_in_rate)
+
 
 class Human(Player):
     """
@@ -283,7 +347,7 @@ class Random(Player):
 
 
 class QLearningAgent(Player):
-    def __init__(self, balance, model_path=None, epsilon=0.01, train=False, learn_frequency=1, batch_size=50):
+    def __init__(self, balance, model_path=None, epsilon=0.02, train=False, learn_frequency=1, batch_size=50):
         self.balance = balance
         self.folded = False
         self.allin = False
@@ -390,7 +454,7 @@ class QLearningAgent(Player):
 
 
 class MonteCarloQLearningHybrid(QLearningAgent):
-    def __init__(self, balance, model_path=None, epsilon=0.01, train=False, learn_frequency=1, batch_size=50):
+    def __init__(self, balance, model_path=None, epsilon=0.02, train=False, learn_frequency=1, batch_size=50):
         super().__init__(balance=balance, model_path=None, epsilon=epsilon, train=train,
                          learn_frequency=learn_frequency, batch_size=batch_size)
         self.q_network = PokerQNetwork(
