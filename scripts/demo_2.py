@@ -14,6 +14,8 @@ def main():
     """
     Simulates a game of Texas Hold'em
     """
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
     players = [("SmartBCPlayer", ""), ("Random", "")]
     i = 0
     balances = [[] for _ in players]
