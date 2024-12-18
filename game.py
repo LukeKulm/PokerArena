@@ -223,7 +223,7 @@ class Game:
         print("Dealing the flop...")
         self.stage = 1
         self.deal_flop()
-        print(f"Community cards: {self.community_cards.get_cards()}")
+        # print(f"Community cards: {self.community_cards.get_cards()}")
         if not self.allin:
             self.betting_round()
         if self.over or self.user_ended:
@@ -241,7 +241,7 @@ class Game:
         print("Dealing the river...")
         self.stage = 3
         self.deal_river()
-        print(f"Community cards: {self.community_cards.get_cards()}")
+        # print(f"Community cards: {self.community_cards.get_cards()}")
         if not self.allin:
             self.betting_round()
 
@@ -418,7 +418,7 @@ class Game:
                 state[i] = 0
         elif self.stage == 1:
             for i in range(10, 16, 2):
-                print(self.community_cards.get_cards())
+                # print(self.community_cards.get_cards())
                 state[i] = rank_to_num(
                     self.community_cards.get_cards()[i-10])
                 state[i +
