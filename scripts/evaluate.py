@@ -14,10 +14,10 @@ def main(advanced_tracking: bool):
     Simulates a game of Texas Hold'em
     """
     players = [("QLearningAgent",
-                "saved_models/q_network.pth"),
-                ("MonteCarloQLearningHybrid", "saved_models/mc_qlearning_hybrid.pth"), 
-                ("QLearningAgent",
-                "saved_models/q_network.pth"),
+                "saved_models/q_learning_agent.pth"),
+                ("MonteCarloQLearningHybrid", "saved_models/montecarlo_q_hybrid.pth"), 
+                ("PokerTheoryQAgent",
+                "saved_models/poker_theory_model.pth"),
                 ("Random", None),
                 ("Random", None)]
     
