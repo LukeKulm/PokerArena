@@ -15,7 +15,8 @@ def main(save_model, save_path):
     Simulates a game of Texas Hold'em. This is a slightly adapted version of evaluate.py.
     """
     start_balances = 200
-    players = [("MonteCarloQLearningHybrid", None), ("MonteCarlo", None), ("MonteCarlo", None), ("Random", None), ("Random", None)]
+    players = [("MonteCarloQLearningHybrid", None), ("MonteCarlo", None), ("Random", None),
+                ("QLearningAgent", "saved_models/q_network.pth"), ("MonteCarlo", None)]
     i = 0
     balances = [[] for _ in players]
     sums = [0]*len(players)
@@ -39,6 +40,10 @@ def main(save_model, save_path):
         for j in range(len(players)):
             sums[j] += game_balances[j]
 
+    if save_model:
+        q_learning_player = g.players[0]
+        torch.save(q_learning_player.q_network.state_dict(), save_path)
+        
     colors = ["blue", "red", "green", "yellow", "black"]
     for j in range(len(players)):
         plt.plot(range(len(balances[j])), balances[j], color=colors[j])
@@ -52,9 +57,6 @@ def main(save_model, save_path):
     plt.savefig("my_plot.png")
 
     plt.show()
-    if save_model:
-        q_learning_player = g.players[0]
-        torch.save(q_learning_player.q_network.state_dict(), save_path)
 
 
 if __name__ == "__main__":
