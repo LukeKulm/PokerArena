@@ -18,7 +18,7 @@ def main(advanced_tracking: bool):
                 ("MonteCarloQLearningHybrid", "saved_models/montecarlo_q_hybrid.pth"), 
                 ("PokerTheoryQAgent",
                 "saved_models/poker_theory_model.pth"),
-                ("Random", None),
+                ("MonteCarlo", None),
                 ("Random", None)]
     
     i = 0
@@ -32,7 +32,7 @@ def main(advanced_tracking: bool):
     with open(os.devnull, 'w') as fnull:
         with redirect_stdout(fnull):
 
-            n = 100
+            n = 500
             while i < n:
                 g = game.Game(players, 200)
 
