@@ -6,7 +6,7 @@ Final Demo Script:
 James will demonstrate the following:
 1. Demonstrate the poker gym environment that we used to train and evaluate the models, 
 using the command: python -m scripts.simulate from the main directory, with one human player
-and one PokerTheoryQAgent to make the demo easier to follow
+and one PokerTheoryQAgent (after the prompt, simply pressing enter uses the pre-loaded model) to make the demo easier to follow
 
 Max will demonstrate the following:
 1. Demonstrate the poker game calculator, which wraps the AI agents that we've made so far
